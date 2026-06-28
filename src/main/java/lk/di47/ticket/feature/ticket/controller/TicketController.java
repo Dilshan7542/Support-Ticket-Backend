@@ -1,0 +1,50 @@
+package lk.di47.ticket.feature.ticket.controller;
+
+import jakarta.validation.Valid;
+import lk.di47.ticket.constant.MessageConstant;
+import lk.di47.ticket.constant.endpoint.TicketEndpoint;
+import lk.di47.ticket.feature.ticket.dto.*;
+import lk.di47.ticket.feature.ticket.service.TicketService;
+import lk.di47.ticket.response.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+public class TicketController {
+    private final TicketService ticketService;
+
+    @PostMapping(TicketEndpoint.CREATE)
+    public ApiResponse<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest request) {
+        return ApiResponse.success(MessageConstant.CREATED, ticketService.createTicket(request));
+    }
+
+    @PostMapping(TicketEndpoint.LIST)
+    public ApiResponse<List<TicketResponse>> getTickets(@Valid @RequestBody ListTicketRequest request) {
+        return ApiResponse.success(MessageConstant.SUCCESS, ticketService.getTickets());
+    }
+
+    @PostMapping(TicketEndpoint.DETAIL)
+    public ApiResponse<TicketResponse> getTicket(@Valid @RequestBody TicketDetailRequest request) {
+        return ApiResponse.success(MessageConstant.SUCCESS, ticketService.getTicket(request));
+    }
+
+    @PostMapping(TicketEndpoint.UPDATE_STATUS)
+    public ApiResponse<TicketResponse> updateTicketStatus(@Valid @RequestBody UpdateTicketStatusRequest request) {
+        return ApiResponse.success(MessageConstant.UPDATED, ticketService.updateStatus(request));
+    }
+
+    @PostMapping(TicketEndpoint.ASSIGN)
+    public ApiResponse<TicketResponse> assignTicket(@Valid @RequestBody AssignTicketRequest request) {
+        return ApiResponse.success(MessageConstant.UPDATED, ticketService.assignTicket(request));
+    }
+
+    @PostMapping(TicketEndpoint.ADD_REPLY)
+    public ApiResponse<Long> addReply(@Valid @RequestBody AddTicketReplyRequest request) {
+        return ApiResponse.success(MessageConstant.CREATED, ticketService.addReply(request));
+    }
+}
