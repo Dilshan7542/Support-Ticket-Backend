@@ -1,6 +1,6 @@
 package lk.di47.ticket.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +35,7 @@ public class EncryptionFilter extends OncePerRequestFilter {
     private final CryptoProperties properties;
     private final KeyExchangeService keyExchangeService;
     private final SessionCryptoService sessionCryptoService;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
@@ -59,7 +60,7 @@ public class EncryptionFilter extends OncePerRequestFilter {
             keyExchangeService.validateTimestamp(keyId, timestamp);
 
             String encryptedRequestBody = new String(request.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-            EncryptedPayload encryptedPayload = objectMapper.readValue(encryptedRequestBody, EncryptedPayload.class);
+            EncryptedPayload encryptedPayload = jsonMapper.readValue(encryptedRequestBody, EncryptedPayload.class);
             String requestAad = EncryptionAadFactory.requestAad(
                     keyId,
                     request.getMethod(),
@@ -108,13 +109,13 @@ public class EncryptionFilter extends OncePerRequestFilter {
         int responseStatus = response.getStatus();
         String plainResponse = new String(response.getContentAsByteArray(), StandardCharsets.UTF_8);
         if (plainResponse.isBlank()) {
-            plainResponse = objectMapper.writeValueAsString(ApiResponse.success("Success", null));
+            plainResponse = jsonMapper.writeValueAsString(ApiResponse.success("Success", null));
         }
 
         request.setAttribute(CryptoConstant.PLAIN_RESPONSE_BODY, plainResponse);
         String responseAad = EncryptionAadFactory.responseAad(keyId, responseStatus, timestamp, nonce);
         EncryptedPayload encryptedResponse = sessionCryptoService.encrypt(plainResponse, keyId, responseAad);
-        byte[] encryptedBytes = objectMapper.writeValueAsBytes(encryptedResponse);
+        byte[] encryptedBytes = jsonMapper.writeValueAsBytes(encryptedResponse);
 
         response.resetBuffer();
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -130,7 +131,7 @@ public class EncryptionFilter extends OncePerRequestFilter {
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        objectMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, null));
+        jsonMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, null));
     }
 
     private int resolveStatus(BusinessException exception) {

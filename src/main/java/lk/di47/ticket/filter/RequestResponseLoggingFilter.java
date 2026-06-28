@@ -1,7 +1,6 @@
 package lk.di47.ticket.filter;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +22,8 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +37,7 @@ import java.util.Arrays;
 public class RequestResponseLoggingFilter extends OncePerRequestFilter {
     private final ActivityLogRepository activityLogRepository;
     private final CryptoProperties cryptoProperties;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
@@ -50,7 +51,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         long start = System.currentTimeMillis();
-        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
+        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request,1024 * 1024);
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
         try {
@@ -108,7 +109,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             if (requestBody == null || requestBody.isBlank()) {
                 return null;
             }
-            JsonNode node = objectMapper.readTree(requestBody).get("userId");
+            JsonNode node = jsonMapper.readTree(requestBody).get("userId");
             return node == null || node.isNull() ? null : node.asLong();
         } catch (Exception ignored) {
             return null;
