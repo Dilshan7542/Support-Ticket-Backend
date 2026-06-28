@@ -3,6 +3,11 @@ spring:
     name: support-ticket-backend
   profiles:
     active: dev
+  datasource:
+    url: jdbc:mysql://localhost:3306/ticket_v1?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Colombo
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 1234
   jackson:
     default-property-inclusion: non_null
   jpa:
