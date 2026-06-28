@@ -1,8 +1,11 @@
 package lk.di47.ticket.util.mask;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
+
 
 import java.util.Set;
 
@@ -33,7 +36,7 @@ public final class SensitiveDataMasker {
         }
         if (node.isObject()) {
             ObjectNode objectNode = (ObjectNode) node;
-            objectNode.fieldNames().forEachRemaining(field -> {
+            objectNode.propertyNames().forEach(field -> {
                 if (SENSITIVE_FIELDS.contains(field)) {
                     objectNode.put(field, "****");
                 } else {
