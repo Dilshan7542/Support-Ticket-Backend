@@ -1,5 +1,6 @@
 package lk.di47.ticket.feature.security.service.impl;
 
+import jakarta.annotation.PostConstruct;
 import lk.di47.ticket.crypto.CryptoProperties;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
@@ -8,6 +9,7 @@ import lk.di47.ticket.feature.security.dto.KeyExchangeResponse;
 import lk.di47.ticket.feature.security.model.EncryptionSession;
 import lk.di47.ticket.feature.security.service.KeyExchangeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.KeyAgreement;
@@ -20,6 +22,7 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,10 +39,34 @@ public class KeyExchangeServiceImpl implements KeyExchangeService {
     private static final byte[] HKDF_INFO = "support-ticket-backend:browser-session:v1".getBytes(StandardCharsets.UTF_8);
     private static final int AES_256_KEY_BYTES = 32;
     private static final int SALT_LENGTH_BYTES = 32;
+    private static final String DEV_FIXED_KEY_ID = "b37acbd1-1587-4ae9-b7cf-e2ccb62967c8";
 
     private final CryptoProperties cryptoProperties;
     private final ConcurrentMap<String, EncryptionSession> sessions = new ConcurrentHashMap<>();
     private final SecureRandom secureRandom = new SecureRandom();
+
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
+
+    @PostConstruct
+    public void init() {
+        if (isProdProfile()) {
+            return;
+        }
+
+        byte[] keyBytes = cryptoProperties.getSecretKey().getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length != AES_256_KEY_BYTES) {
+            throw new IllegalStateException("app.crypto.secret-key must be exactly 32 bytes for the dev fixed key");
+        }
+
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(Duration.ofMinutes(cryptoProperties.getSessionTtlMinutes()));
+        SecretKey encryptionKey = new SecretKeySpec(keyBytes, AES_ALGORITHM);
+        sessions.put(DEV_FIXED_KEY_ID, new EncryptionSession(DEV_FIXED_KEY_ID, encryptionKey, now, expiresAt));
+    }
+    private boolean isProdProfile() {
+        return "prod".equals(this.activeProfile);
+    }
 
     @Override
     public KeyExchangeResponse createExchange(KeyExchangeRequest request) {
@@ -170,6 +197,8 @@ public class KeyExchangeServiceImpl implements KeyExchangeService {
         Instant now = Instant.now();
         sessions.entrySet().removeIf(entry -> entry.getValue().isExpired(now));
     }
+
+
 
     private PublicKey decodeClientPublicKey(String encodedKey) throws Exception {
         byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
