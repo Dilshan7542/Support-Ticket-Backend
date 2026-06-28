@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="LOG_PATTERN">[%X{traceId:-NO_TRACE}] %-5p %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{36} - %m%n</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [traceId=%X{traceId}] [%t] %c{36} - %m%n</Property>
     </Properties>
 
     <Appenders>
@@ -11,7 +11,7 @@
     </Appenders>
 
     <Loggers>
-        <Logger name="com.epicw.aiticket" level="INFO" additivity="false">
+        <Logger name="lk.di47.ticket" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="org.springframework.security" level="INFO"/>
