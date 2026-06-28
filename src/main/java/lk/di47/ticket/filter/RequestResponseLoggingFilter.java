@@ -15,7 +15,6 @@ import lk.di47.ticket.util.generator.ActivityActionGenerator;
 import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -36,6 +35,8 @@ import java.util.Arrays;
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 @RequiredArgsConstructor
 public class RequestResponseLoggingFilter extends OncePerRequestFilter {
+    private static final int MAX_LOG_BODY_LENGTH = 4000;
+
     private final ActivityLogRepository activityLogRepository;
     private final CryptoProperties cryptoProperties;
     private final JsonMapper jsonMapper;
@@ -59,36 +60,38 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             filterChain.doFilter(wrappedRequest, wrappedResponse);
         } finally {
             long executionTimeMs = System.currentTimeMillis() - start;
-            saveActivityLog(request, wrappedRequest, wrappedResponse, executionTimeMs);
-            log.info("{} {} completed with status {} in {} ms",
-                    request.getMethod(), request.getRequestURI(), wrappedResponse.getStatus(), executionTimeMs);
+            String requestBody = resolveRequestBody(request, wrappedRequest);
+            String responseBody = resolveResponseBody(request, wrappedResponse);
+            String maskedRequestBody = SensitiveDataMasker.mask(requestBody);
+            String maskedResponseBody = SensitiveDataMasker.mask(responseBody);
+
+            saveActivityLog(request, maskedRequestBody, maskedResponseBody, requestBody, wrappedResponse, executionTimeMs);
+            log.info("{} {} completed with status {} in {} ms request={} response={}",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    wrappedResponse.getStatus(),
+                    executionTimeMs,
+                    truncateForLog(maskedRequestBody),
+                    truncateForLog(maskedResponseBody));
             wrappedResponse.copyBodyToResponse();
         }
     }
 
     private void saveActivityLog(HttpServletRequest originalRequest,
-                                 ContentCachingRequestWrapper request,
+                                 String maskedRequestBody,
+                                 String maskedResponseBody,
+                                 String requestBody,
                                  ContentCachingResponseWrapper response,
                                  long executionTimeMs) {
         try {
-            String requestBody = (String) originalRequest.getAttribute(CryptoConstant.DECRYPTED_REQUEST_BODY);
-            if (requestBody == null) {
-                requestBody = new String(request.getContentAsByteArray(), StandardCharsets.UTF_8);
-            }
-
-            String responseBody = (String) originalRequest.getAttribute(CryptoConstant.PLAIN_RESPONSE_BODY);
-            if (responseBody == null) {
-                responseBody = new String(response.getContentAsByteArray(), StandardCharsets.UTF_8);
-            }
-
             ActivityLog log = new ActivityLog();
             log.setTraceId((String) originalRequest.getAttribute(CryptoConstant.TRACE_ID));
             log.setUserId(resolveUserId(originalRequest, requestBody));
             log.setHttpMethod(originalRequest.getMethod());
             log.setEndpoint(originalRequest.getRequestURI());
             log.setAction(ActivityActionGenerator.generate(originalRequest.getRequestURI()));
-            log.setRequestBody(SensitiveDataMasker.mask(requestBody));
-            log.setResponseBody(SensitiveDataMasker.mask(responseBody));
+            log.setRequestBody(maskedRequestBody);
+            log.setResponseBody(maskedResponseBody);
             log.setResponseStatus(response.getStatus());
             log.setIpAddress(originalRequest.getRemoteAddr());
             log.setUserAgent(originalRequest.getHeader("User-Agent"));
@@ -99,6 +102,29 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         } catch (Exception exception) {
             log.warn("Activity log save failed: {}", exception.getMessage());
         }
+    }
+
+    private String resolveRequestBody(HttpServletRequest originalRequest, ContentCachingRequestWrapper request) {
+        String requestBody = (String) originalRequest.getAttribute(CryptoConstant.DECRYPTED_REQUEST_BODY);
+        if (requestBody != null) {
+            return requestBody;
+        }
+        return new String(request.getContentAsByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private String resolveResponseBody(HttpServletRequest originalRequest, ContentCachingResponseWrapper response) {
+        String responseBody = (String) originalRequest.getAttribute(CryptoConstant.PLAIN_RESPONSE_BODY);
+        if (responseBody != null) {
+            return responseBody;
+        }
+        return new String(response.getContentAsByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private String truncateForLog(String body) {
+        if (body == null || body.length() <= MAX_LOG_BODY_LENGTH) {
+            return body;
+        }
+        return body.substring(0, MAX_LOG_BODY_LENGTH);
     }
 
     private Long resolveUserId(HttpServletRequest request, String requestBody) {

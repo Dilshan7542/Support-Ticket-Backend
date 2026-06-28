@@ -2,6 +2,7 @@ package lk.di47.ticket.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import lk.di47.ticket.response.ApiResponse;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Log4j2
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
@@ -40,7 +42,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleException(Exception exception) {
+    public ResponseEntity<ApiResponse<Object>> handleException(Exception e) {
+        log.error("Error -> {}",e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.failed("Internal server error", null));
     }

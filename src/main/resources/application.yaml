@@ -10,6 +10,17 @@ spring:
     password: 1234
   jackson:
     default-property-inclusion: non_null
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
   jpa:
     hibernate:
      ddl-auto: none
@@ -21,14 +32,16 @@ server:
   port: 8080
 
 app:
+  mail:
+    from: ${APP_MAIL_FROM:no-reply@aiticket.local}
+  jwt:
+    access-token-expiration-minutes: ${APP_JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:2880}
+    refresh-token-expiration-minutes: ${APP_JWT_REFRESH_TOKEN_EXPIRATION_MINUTES:1440}
+    secret: ${APP_JWT_SECRET:change-this-secret-value-in-production-minimum-32-chars}
   crypto:
     enabled: false
     excluded-paths: /actuator/**,/api/v1/health/status,/h2-console/**
     secret-key: ${APP_CRYPTO_SECRET_KEY:12345678901234567890123456789012}
-    jwt:
-      access-token-expiration-minutes: 30
-      refresh-token-expiration-minutes: 1440
-      secret: ${APP_JWT_SECRET:change-this-secret-value-in-production-minimum-32-chars}
 
 logging:
   config: classpath:log4j2-spring.xml

@@ -50,6 +50,10 @@ public class EncryptionFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        if(shouldNotFilter(request)){
+            filterChain.doFilter(request, response);
+            return;
+        }
         String keyId = request.getHeader(SecurityConstant.KEY_ID_HEADER);
         String timestamp = request.getHeader(SecurityConstant.TIMESTAMP_HEADER);
         String nonce = request.getHeader(SecurityConstant.NONCE_HEADER);
