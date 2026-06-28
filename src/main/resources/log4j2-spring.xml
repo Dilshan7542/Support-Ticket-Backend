@@ -1,22 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [traceId=%X{traceId}] [%t] %c{36} - %m%n</Property>
+        <Property name="LOG_PATTERN">[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [traceId=%X{traceId:-NO_TRACE}] [thread=%t] [logger=%c{36}] %m%n</Property>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="LOG_FILE">support-ticket-backend.log</Property>
     </Properties>
 
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
+
+        <RollingFile name="File"
+                     fileName="${LOG_DIR}/${LOG_FILE}"
+                     filePattern="${LOG_DIR}/support-ticket-backend-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="14"/>
+        </RollingFile>
     </Appenders>
 
     <Loggers>
-        <Logger name="lk.di47.ticket" level="INFO" additivity="false">
+        <Logger name="lk.di47.ticket" level="DEBUG" additivity="false">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
         </Logger>
         <Logger name="org.springframework.security" level="INFO"/>
         <Root level="INFO">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
         </Root>
     </Loggers>
 </Configuration>
