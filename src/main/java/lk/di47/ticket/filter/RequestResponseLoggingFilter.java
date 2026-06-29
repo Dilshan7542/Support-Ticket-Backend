@@ -111,12 +111,12 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             return;
         }
 
-        log.debug("URL: {} {}", request.getMethod(), getRequestUrl(request));
-        log.debug("Headers: {}", formatHeaders(request));
-        log.debug("Request Body: {}", formatJsonForLog(maskedRequestBody));
-        log.debug("Response Status: {}", response.getStatus());
-        log.debug("Execution Time: {} ms", executionTimeMs);
-        log.debug("Response Body: {}", formatJsonForLog(maskedResponseBody));
+        log.debug("URL -> {} {}", request.getMethod(), getRequestUrl(request));
+        log.debug("Headers -> [{}]", formatHeaders(request));
+        log.debug("Request Body -> {}", formatJsonForLog(maskedRequestBody));
+        log.debug("Response Status -> {}", response.getStatus());
+        log.debug("Execution Time -> {} ms", executionTimeMs);
+        log.debug("Response Body -> {}", formatJsonForLog(maskedResponseBody));
     }
 
     private String resolveRequestBody(HttpServletRequest originalRequest, ContentCachingRequestWrapper request) {
