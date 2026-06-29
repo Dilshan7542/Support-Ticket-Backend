@@ -5,12 +5,15 @@ import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.exception.NotFoundException;
 import lk.di47.ticket.feature.ticket.config.TicketAttachmentProperties;
+import lk.di47.ticket.feature.ticket.dto.TicketAttachmentDownload;
 import lk.di47.ticket.feature.ticket.dto.TicketAttachmentResponse;
 import lk.di47.ticket.feature.ticket.service.TicketAttachmentService;
 import lk.di47.ticket.repository.TicketAttachmentRepository;
 import lk.di47.ticket.repository.TicketRepository;
 import lk.di47.ticket.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -59,6 +62,34 @@ public class TicketAttachmentServiceImpl implements TicketAttachmentService {
         return toAttachmentResponse(ticketAttachmentRepository.save(attachment));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public TicketAttachmentDownload downloadAttachment(Long attachmentId) {
+        if (attachmentId == null) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "attachmentId is required");
+        }
+        TicketAttachment attachment = ticketAttachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new NotFoundException("Attachment not found"));
+
+        Path basePath = Path.of(attachmentProperties.getStoragePath()).toAbsolutePath().normalize();
+        Path attachmentPath = Path.of(attachment.getStoragePath()).toAbsolutePath().normalize();
+        if (!attachmentPath.startsWith(basePath)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Invalid attachment path");
+        }
+        if (!Files.exists(attachmentPath) || !Files.isRegularFile(attachmentPath)) {
+            throw new NotFoundException("Attachment file not found");
+        }
+
+        Resource resource = new FileSystemResource(attachmentPath);
+        return new TicketAttachmentDownload(
+                attachment.getId(),
+                resource,
+                attachment.getOriginalFileName(),
+                resolveContentType(attachment),
+                attachment.getFileSize()
+        );
+    }
+
     private void validateAttachmentRequest(Long userId, Long ticketId, MultipartFile file) {
         if (userId == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "userId is required");
@@ -100,6 +131,13 @@ public class TicketAttachmentServiceImpl implements TicketAttachmentService {
             return "";
         }
         return fileName.substring(dotIndex).toLowerCase(Locale.ROOT);
+    }
+
+    private String resolveContentType(TicketAttachment attachment) {
+        if (attachment.getContentType() == null || attachment.getContentType().isBlank()) {
+            return "application/octet-stream";
+        }
+        return attachment.getContentType();
     }
 
     private TicketAttachmentResponse toAttachmentResponse(TicketAttachment attachment) {

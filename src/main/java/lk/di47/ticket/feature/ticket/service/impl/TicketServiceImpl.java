@@ -2,6 +2,7 @@ package lk.di47.ticket.feature.ticket.service.impl;
 
 import lk.di47.ticket.entity.AiPrediction;
 import lk.di47.ticket.entity.Ticket;
+import lk.di47.ticket.entity.TicketAttachment;
 import lk.di47.ticket.entity.TicketReply;
 import lk.di47.ticket.entity.TicketStatusHistory;
 import lk.di47.ticket.exception.NotFoundException;
@@ -12,6 +13,7 @@ import lk.di47.ticket.feature.notification.service.NotificationService;
 import lk.di47.ticket.feature.ticket.dto.*;
 import lk.di47.ticket.feature.ticket.service.TicketService;
 import lk.di47.ticket.repository.AiPredictionRepository;
+import lk.di47.ticket.repository.TicketAttachmentRepository;
 import lk.di47.ticket.repository.TicketReplyRepository;
 import lk.di47.ticket.repository.TicketRepository;
 import lk.di47.ticket.repository.TicketStatusHistoryRepository;
@@ -28,13 +30,17 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Log4j2
 @Service
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
     private final TicketRepository ticketRepository;
+    private final TicketAttachmentRepository ticketAttachmentRepository;
     private final TicketReplyRepository ticketReplyRepository;
     private final TicketStatusHistoryRepository ticketStatusHistoryRepository;
     private final AiPredictionRepository aiPredictionRepository;
@@ -72,12 +78,17 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public List<TicketResponse> getTickets() {
-        return ticketRepository.findAll().stream().map(this::toResponse).toList();
+        List<Ticket> tickets = ticketRepository.findAll();
+        Map<Long, List<TicketAttachmentSummary>> attachmentsByTicketId = loadAttachmentsByTicketId(tickets);
+        return tickets.stream()
+                .map(ticket -> toResponse(ticket, attachmentsByTicketId.getOrDefault(ticket.getId(), List.of())))
+                .toList();
     }
 
     @Override
     public TicketResponse getTicket(TicketDetailRequest request) {
-        return toResponse(findTicket(request.ticketId()));
+        Ticket ticket = findTicket(request.ticketId());
+        return toResponse(ticket, loadAttachments(ticket.getId()));
     }
 
     @Override
@@ -215,6 +226,10 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private TicketResponse toResponse(Ticket ticket) {
+        return toResponse(ticket, loadAttachments(ticket.getId()));
+    }
+
+    private TicketResponse toResponse(Ticket ticket, List<TicketAttachmentSummary> attachments) {
         return new TicketResponse(
                 ticket.getId(),
                 ticket.getTicketNo(),
@@ -226,8 +241,31 @@ public class TicketServiceImpl implements TicketService {
                 ticket.getCategory(),
                 ticket.getPriority(),
                 ticket.getStatus(),
-                ticket.getCreatedAt()
+                ticket.getCreatedAt(),
+                attachments
         );
+    }
+
+    private List<TicketAttachmentSummary> loadAttachments(Long ticketId) {
+        return ticketAttachmentRepository.findByTicketId(ticketId).stream()
+                .map(this::toAttachmentSummary)
+                .toList();
+    }
+
+    private Map<Long, List<TicketAttachmentSummary>> loadAttachmentsByTicketId(List<Ticket> tickets) {
+        List<Long> ticketIds = tickets.stream().map(Ticket::getId).toList();
+        if (ticketIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return ticketAttachmentRepository.findByTicketIdIn(ticketIds).stream()
+                .collect(Collectors.groupingBy(
+                        TicketAttachment::getTicketId,
+                        Collectors.mapping(this::toAttachmentSummary, Collectors.toList())
+                ));
+    }
+
+    private TicketAttachmentSummary toAttachmentSummary(TicketAttachment attachment) {
+        return new TicketAttachmentSummary(attachment.getId(), attachment.getOriginalFileName());
     }
 
 }

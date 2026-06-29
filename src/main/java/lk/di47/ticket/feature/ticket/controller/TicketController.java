@@ -9,7 +9,12 @@ import lk.di47.ticket.feature.ticket.service.TicketService;
 import lk.di47.ticket.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,6 +68,21 @@ public class TicketController {
                                                                   @RequestParam(required = false) Long ticketId,
                                                                   @RequestParam MultipartFile attachment) {
         return ApiResponse.success(MessageConstant.CREATED, ticketAttachmentService.uploadAttachment(userId, ticketId, attachment));
+    }
+
+    @GetMapping(TicketEndpoint.DOWNLOAD_ATTACHMENT)
+    public ResponseEntity<Resource> downloadAttachment(@RequestParam Long id) {
+        TicketAttachmentDownload attachment = ticketAttachmentService.downloadAttachment(id);
+        ContentDisposition contentDisposition = ContentDisposition.attachment()
+                .filename(attachment.originalFileName())
+                .build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(attachment.contentType()))
+                .contentLength(attachment.fileSize())
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
+                .header("X-Attachment-Id", String.valueOf(attachment.id()))
+                .header("X-File-Name", attachment.originalFileName())
+                .body(attachment.resource());
     }
 
     private String toJson(Object data){

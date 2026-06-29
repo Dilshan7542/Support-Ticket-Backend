@@ -36,6 +36,9 @@ server:
   port: 8080
 
 app:
+  ai:
+    mode: ${APP_AI_MODE:java}
+    base-url: ${APP_AI_BASE_URL:http://localhost:5000}
   mail:
     from: ${APP_MAIL_FROM:no-reply@aiticket.local}
   attachment:
@@ -47,7 +50,7 @@ app:
     secret: ${APP_JWT_SECRET:change-this-secret-value-in-production-minimum-32-chars}
   crypto:
     enabled: false
-    excluded-paths: /actuator/**,/api/v1/health/status,/h2-console/**,/api/v1/tickets/upload-attachment
+    excluded-paths: /actuator/**,/api/v1/health/status,/h2-console/**,/api/v1/tickets/upload-attachment,/api/v1/tickets/attachments/download
     secret-key: ${APP_CRYPTO_SECRET_KEY:12345678901234567890123456789012}
 
 logging:

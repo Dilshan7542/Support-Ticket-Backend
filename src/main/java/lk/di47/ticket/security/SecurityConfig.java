@@ -50,7 +50,7 @@ public class SecurityConfig {
             @Value("${app.security.allowed-origins:http://localhost:3000,http://localhost:5173}") String allowedOrigins) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(",")).map(String::trim).toList());
-        configuration.setAllowedMethods(List.of("POST", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
                 "Content-Type",
                 "Authorization",
@@ -59,7 +59,14 @@ public class SecurityConfig {
                 "X-Nonce",
                 "X-Trace-Id"
         ));
-        configuration.setExposedHeaders(List.of("X-Key-Id", "X-Content-Encryption", "X-Trace-Id"));
+        configuration.setExposedHeaders(List.of(
+                "Content-Disposition",
+                "X-Attachment-Id",
+                "X-File-Name",
+                "X-Key-Id",
+                "X-Content-Encryption",
+                "X-Trace-Id"
+        ));
         configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 

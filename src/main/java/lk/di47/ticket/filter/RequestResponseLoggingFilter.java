@@ -128,6 +128,9 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
     }
 
     private String resolveResponseBody(HttpServletRequest originalRequest, ContentCachingResponseWrapper response) {
+        if (shouldSkipResponseBody(response)) {
+            return null;
+        }
         String responseBody = (String) originalRequest.getAttribute(CryptoConstant.PLAIN_RESPONSE_BODY);
         if (responseBody != null) {
             return responseBody;
@@ -138,6 +141,22 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
     private boolean isMultipartRequest(HttpServletRequest request) {
         String contentType = request.getContentType();
         return contentType != null && contentType.toLowerCase(java.util.Locale.ROOT).startsWith("multipart/");
+    }
+
+    private boolean shouldSkipResponseBody(ContentCachingResponseWrapper response) {
+        String contentDisposition = response.getHeader("Content-Disposition");
+        if (contentDisposition != null && contentDisposition.toLowerCase(java.util.Locale.ROOT).contains("attachment")) {
+            return true;
+        }
+
+        String contentType = response.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            return false;
+        }
+        String lowerContentType = contentType.toLowerCase(java.util.Locale.ROOT);
+        return !lowerContentType.startsWith("text/")
+                && !lowerContentType.contains("json")
+                && !lowerContentType.contains("xml");
     }
 
     private String truncateForLog(String body) {

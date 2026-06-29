@@ -4,6 +4,7 @@ import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record TicketResponse(
         Long id,
@@ -16,6 +17,7 @@ public record TicketResponse(
         String category,
         TicketPriority priority,
         TicketStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        List<TicketAttachmentSummary> attachments
 ) {
 }

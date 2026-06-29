@@ -15,4 +15,5 @@ public final class TicketEndpoint {
     public static final String ADD_REPLY = BASE + "/add-reply";
     public static final String ASSIGN = BASE + "/assign";
     public static final String UPLOAD_ATTACHMENT = BASE + "/upload-attachment";
+    public static final String DOWNLOAD_ATTACHMENT = BASE + "/attachments/download";
 }

@@ -3,6 +3,8 @@ package lk.di47.ticket.util.mapper;
 import lk.di47.ticket.entity.Ticket;
 import lk.di47.ticket.feature.ticket.dto.TicketResponse;
 
+import java.util.List;
+
 public final class TicketMapper {
     private TicketMapper() {
     }
@@ -19,7 +21,8 @@ public final class TicketMapper {
                 ticket.getCategory(),
                 ticket.getPriority(),
                 ticket.getStatus(),
-                ticket.getCreatedAt()
+                ticket.getCreatedAt(),
+                List.of()
         );
     }
 }
