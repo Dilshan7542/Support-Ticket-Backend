@@ -8,9 +8,12 @@ import lk.di47.ticket.feature.ticket.service.TicketService;
 import lk.di47.ticket.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
@@ -52,6 +55,14 @@ public class TicketController {
     public ApiResponse<Long> addReply(@Valid @RequestBody AddTicketReplyRequest request) {
         return ApiResponse.success(MessageConstant.CREATED, ticketService.addReply(request));
     }
+
+    @PostMapping(value = TicketEndpoint.UPLOAD_ATTACHMENT, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<TicketAttachmentResponse> uploadAttachment(@RequestParam Long userId,
+                                                                  @RequestParam(required = false) Long ticketId,
+                                                                  @RequestParam MultipartFile attachment) {
+        return ApiResponse.success(MessageConstant.CREATED, ticketService.uploadAttachment(userId, ticketId, attachment));
+    }
+
     private String toJson(Object data){
       return   jsonMapper.writeValueAsString(data);
     }

@@ -39,6 +39,19 @@ CREATE TABLE IF NOT EXISTS tickets (
     updated_at DATETIME NULL
 );
 
+CREATE TABLE IF NOT EXISTS ticket_attachments (
+                                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                                  ticket_id BIGINT NULL,
+                                                  uploaded_by_user_id BIGINT NOT NULL,
+                                                  original_file_name VARCHAR(255) NOT NULL,
+    stored_file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(120),
+    file_size BIGINT NOT NULL,
+    storage_path VARCHAR(500) NOT NULL,
+    created_at DATETIME NOT NULL
+    );
+
+
 CREATE TABLE IF NOT EXISTS ticket_replies (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_id BIGINT NOT NULL,
@@ -103,3 +116,4 @@ CREATE TABLE IF NOT EXISTS mail_logs (
     error_message TEXT NULL,
     created_at DATETIME NOT NULL
 );
+

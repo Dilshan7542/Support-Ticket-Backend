@@ -61,7 +61,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             filterChain.doFilter(wrappedRequest, wrappedResponse);
         } finally {
             long executionTimeMs = System.currentTimeMillis() - start;
-            String requestBody = resolveRequestBody(request, wrappedRequest);
+            String requestBody = isMultipartRequest(request) ? null : resolveRequestBody(request, wrappedRequest);
             String responseBody = resolveResponseBody(request, wrappedResponse);
             String maskedRequestBody = SensitiveDataMasker.mask(requestBody);
             String maskedResponseBody = SensitiveDataMasker.mask(responseBody);
@@ -133,6 +133,11 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             return responseBody;
         }
         return new String(response.getContentAsByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private boolean isMultipartRequest(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        return contentType != null && contentType.toLowerCase(java.util.Locale.ROOT).startsWith("multipart/");
     }
 
     private String truncateForLog(String body) {
