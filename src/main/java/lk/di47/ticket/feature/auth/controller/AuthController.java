@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lk.di47.ticket.constant.MessageConstant;
 import lk.di47.ticket.constant.SecurityConstant;
 import lk.di47.ticket.constant.endpoint.AuthEndpoint;
+import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.feature.auth.dto.*;
 import lk.di47.ticket.feature.auth.service.AuthService;
 import lk.di47.ticket.response.ApiResponse;
@@ -42,7 +43,7 @@ public class AuthController {
                                     @RequestHeader(SecurityConstant.KEY_ID_HEADER) String encryptionKeyId) {
         Long currentUserId = (Long) servletRequest.getAttribute(SecurityConstant.CURRENT_USER_ID);
         if (!request.userId().equals(currentUserId)) {
-            throw new lk.di47.ticket.exception.BusinessException(
+            throw new BusinessException(
                     lk.di47.ticket.exception.ErrorCode.UNAUTHORIZED,
                     "Logout user mismatch"
             );
