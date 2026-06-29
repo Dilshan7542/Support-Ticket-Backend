@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 
 @Log4j2
 @Component
@@ -66,13 +67,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             String maskedResponseBody = SensitiveDataMasker.mask(responseBody);
 
             saveActivityLog(request, maskedRequestBody, maskedResponseBody, requestBody, wrappedResponse, executionTimeMs);
-            log.info("{} {} completed with status {} in {} ms request={} response={}",
-                    request.getMethod(),
-                    request.getRequestURI(),
-                    wrappedResponse.getStatus(),
-                    executionTimeMs,
-                    truncateForLog(maskedRequestBody),
-                    truncateForLog(maskedResponseBody));
+            logRequestResponse(request, wrappedResponse, executionTimeMs, maskedRequestBody, maskedResponseBody);
             wrappedResponse.copyBodyToResponse();
         }
     }
@@ -90,8 +85,8 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             log.setHttpMethod(originalRequest.getMethod());
             log.setEndpoint(originalRequest.getRequestURI());
             log.setAction(ActivityActionGenerator.generate(originalRequest.getRequestURI()));
-            log.setRequestBody(maskedRequestBody);
-            log.setResponseBody(maskedResponseBody);
+            log.setRequestBody(resolveActivityLogBody(maskedRequestBody));
+            log.setResponseBody(resolveActivityLogBody(maskedResponseBody));
             log.setResponseStatus(response.getStatus());
             log.setIpAddress(originalRequest.getRemoteAddr());
             log.setUserAgent(originalRequest.getHeader("User-Agent"));
@@ -102,6 +97,26 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         } catch (Exception exception) {
             log.warn("Activity log save failed: {}", exception.getMessage());
         }
+    }
+
+    private void logRequestResponse(HttpServletRequest request,
+                                    ContentCachingResponseWrapper response,
+                                    long executionTimeMs,
+                                    String maskedRequestBody,
+                                    String maskedResponseBody) {
+        log.info("{} {} completed with status {} in {} ms",
+                request.getMethod(), request.getRequestURI(), response.getStatus(), executionTimeMs);
+
+        if (!log.isDebugEnabled()) {
+            return;
+        }
+
+        log.debug("URL: {} {}", request.getMethod(), getRequestUrl(request));
+        log.debug("Headers: {}", formatHeaders(request));
+        log.debug("Request Body: {}", formatJsonForLog(maskedRequestBody));
+        log.debug("Response Status: {}", response.getStatus());
+        log.debug("Execution Time: {} ms", executionTimeMs);
+        log.debug("Response Body: {}", formatJsonForLog(maskedResponseBody));
     }
 
     private String resolveRequestBody(HttpServletRequest originalRequest, ContentCachingRequestWrapper request) {
@@ -125,6 +140,64 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             return body;
         }
         return body.substring(0, MAX_LOG_BODY_LENGTH);
+    }
+
+    private String getRequestUrl(HttpServletRequest request) {
+        String queryString = request.getQueryString();
+        if (queryString == null || queryString.isBlank()) {
+            return request.getRequestURI();
+        }
+        return request.getRequestURL() + "?" + queryString;
+    }
+
+    private String formatHeaders(HttpServletRequest request) {
+        return Collections.list(request.getHeaderNames()).stream()
+                .map(header -> header + ": " + maskHeaderValue(header, request.getHeader(header)))
+                .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    private String maskHeaderValue(String header, String value) {
+        if (value == null) {
+            return null;
+        }
+        if ("authorization".equalsIgnoreCase(header)) {
+            return "****";
+        }
+        return value;
+    }
+
+    private String formatJsonForLog(String body) {
+        String truncatedBody = truncateForLog(body);
+        if (truncatedBody == null || truncatedBody.isBlank()) {
+            return "";
+        }
+        try {
+            return jsonMapper.writeValueAsString(jsonMapper.readTree(truncatedBody));
+        } catch (Exception ignored) {
+            return truncatedBody;
+        }
+    }
+
+    private String resolveActivityLogBody(String body) {
+        if (isEncryptedPayload(body)) {
+            return null;
+        }
+        return body;
+    }
+
+    private boolean isEncryptedPayload(String body) {
+        if (body == null || body.isBlank()) {
+            return false;
+        }
+        try {
+            JsonNode node = jsonMapper.readTree(body);
+            return node != null
+                    && node.isObject()
+                    && node.get("iv") != null
+                    && node.get("cipherText") != null;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private Long resolveUserId(HttpServletRequest request, String requestBody) {

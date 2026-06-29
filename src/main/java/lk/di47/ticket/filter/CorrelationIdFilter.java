@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lk.di47.ticket.constant.CryptoConstant;
 import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -29,10 +30,12 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
         request.setAttribute(CryptoConstant.TRACE_ID, traceId);
         response.setHeader(TRACE_ID_HEADER, traceId);
         ThreadContext.put("traceId", traceId);
+        MDC.put("traceId", traceId);
         try {
             filterChain.doFilter(request, response);
         } finally {
             ThreadContext.remove("traceId");
+            MDC.remove("traceId");
         }
     }
 }

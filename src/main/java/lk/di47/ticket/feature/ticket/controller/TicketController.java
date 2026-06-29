@@ -7,19 +7,24 @@ import lk.di47.ticket.feature.ticket.dto.*;
 import lk.di47.ticket.feature.ticket.service.TicketService;
 import lk.di47.ticket.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Log4j2
 public class TicketController {
     private final TicketService ticketService;
+    private final JsonMapper jsonMapper;
 
     @PostMapping(TicketEndpoint.CREATE)
     public ApiResponse<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest request) {
+        log.debug("Ticket Controller -> {}",this.toJson(request));
         return ApiResponse.success(MessageConstant.CREATED, ticketService.createTicket(request));
     }
 
@@ -46,5 +51,8 @@ public class TicketController {
     @PostMapping(TicketEndpoint.ADD_REPLY)
     public ApiResponse<Long> addReply(@Valid @RequestBody AddTicketReplyRequest request) {
         return ApiResponse.success(MessageConstant.CREATED, ticketService.addReply(request));
+    }
+    private String toJson(Object data){
+      return   jsonMapper.writeValueAsString(data);
     }
 }

@@ -20,7 +20,7 @@ import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import lk.di47.ticket.util.generator.TicketNumberGenerator;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
@@ -30,7 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Slf4j
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
