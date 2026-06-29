@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lk.di47.ticket.constant.MessageConstant;
 import lk.di47.ticket.constant.endpoint.TicketEndpoint;
 import lk.di47.ticket.feature.ticket.dto.*;
+import lk.di47.ticket.feature.ticket.service.TicketAttachmentService;
 import lk.di47.ticket.feature.ticket.service.TicketService;
 import lk.di47.ticket.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import java.util.List;
 @Log4j2
 public class TicketController {
     private final TicketService ticketService;
+    private final TicketAttachmentService ticketAttachmentService;
     private final JsonMapper jsonMapper;
 
     @PostMapping(TicketEndpoint.CREATE)
@@ -60,7 +62,7 @@ public class TicketController {
     public ApiResponse<TicketAttachmentResponse> uploadAttachment(@RequestParam Long userId,
                                                                   @RequestParam(required = false) Long ticketId,
                                                                   @RequestParam MultipartFile attachment) {
-        return ApiResponse.success(MessageConstant.CREATED, ticketService.uploadAttachment(userId, ticketId, attachment));
+        return ApiResponse.success(MessageConstant.CREATED, ticketAttachmentService.uploadAttachment(userId, ticketId, attachment));
     }
 
     private String toJson(Object data){
