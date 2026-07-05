@@ -1,6 +1,6 @@
 
 
-CREATE TABLE IF NOT EXISTS app_users (
+CREATE TABLE IF NOT EXISTS app_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS app_users (
     updated_at DATETIME NULL
 );
 
-CREATE TABLE IF NOT EXISTS companies (
+CREATE TABLE IF NOT EXISTS company (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL UNIQUE,
     code VARCHAR(64) NOT NULL UNIQUE,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS companies (
     updated_at DATETIME NULL
 );
 
-CREATE TABLE IF NOT EXISTS departments (
+CREATE TABLE IF NOT EXISTS department (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     code VARCHAR(64) NOT NULL,
@@ -34,11 +34,11 @@ CREATE TABLE IF NOT EXISTS departments (
     status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NULL,
-    UNIQUE KEY uk_departments_company_code (company_id, code),
-    INDEX idx_departments_company_id (company_id)
+    UNIQUE KEY uk_department_company_code (company_id, code),
+    INDEX idx_department_company_id (company_id)
 );
 
-CREATE TABLE IF NOT EXISTS ticket_categories (
+CREATE TABLE IF NOT EXISTS ticket_category (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     company_id BIGINT NULL,
     department_id BIGINT NULL,
@@ -48,11 +48,11 @@ CREATE TABLE IF NOT EXISTS ticket_categories (
     status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NULL,
-    INDEX idx_ticket_categories_company_id (company_id),
-    INDEX idx_ticket_categories_department_id (department_id)
+    INDEX idx_ticket_category_company_id (company_id),
+    INDEX idx_ticket_category_department_id (department_id)
 );
 
-CREATE TABLE IF NOT EXISTS ticket_statuses (
+CREATE TABLE IF NOT EXISTS ticket_status (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     code VARCHAR(64) NOT NULL UNIQUE,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS ticket_statuses (
     updated_at DATETIME NULL
 );
 
-CREATE TABLE IF NOT EXISTS tickets (
+CREATE TABLE IF NOT EXISTS ticket (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_no VARCHAR(50) NOT NULL UNIQUE,
     customer_id BIGINT NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     updated_at DATETIME NULL
 );
 
-CREATE TABLE IF NOT EXISTS ticket_attachments (
+CREATE TABLE IF NOT EXISTS ticket_attachment (
                                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                                   ticket_id BIGINT NULL,
                                                   uploaded_by_user_id BIGINT NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS ticket_attachments (
     );
 
 
-CREATE TABLE IF NOT EXISTS ticket_replies (
+CREATE TABLE IF NOT EXISTS ticket_reply (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_id BIGINT NOT NULL,
     sender_user_id BIGINT NOT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS ticket_status_history (
     created_at DATETIME NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS ai_predictions (
+CREATE TABLE IF NOT EXISTS ai_prediction (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_id BIGINT NOT NULL,
     predicted_category VARCHAR(50),
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS ai_predictions (
     created_at DATETIME NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS activity_logs (
+CREATE TABLE IF NOT EXISTS activity_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     trace_id VARCHAR(80),
     user_id BIGINT NULL,
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     created_at DATETIME NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS notifications (
+CREATE TABLE IF NOT EXISTS notification (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     title VARCHAR(150) NOT NULL,
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at DATETIME NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS mail_logs (
+CREATE TABLE IF NOT EXISTS mail_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     recipient VARCHAR(150) NOT NULL,
     subject VARCHAR(255) NOT NULL,
@@ -155,30 +155,30 @@ CREATE TABLE IF NOT EXISTS mail_logs (
     created_at DATETIME NOT NULL
 );
 
-INSERT INTO ticket_statuses (name, code, description, status, created_at)
+INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'New', 'NEW', 'Ticket has been created', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'NEW');
+WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'NEW');
 
-INSERT INTO ticket_statuses (name, code, description, status, created_at)
+INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'Assigned', 'ASSIGNED', 'Ticket has been assigned', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'ASSIGNED');
+WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'ASSIGNED');
 
-INSERT INTO ticket_statuses (name, code, description, status, created_at)
+INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'In Progress', 'IN_PROGRESS', 'Ticket is being handled', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'IN_PROGRESS');
+WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'IN_PROGRESS');
 
-INSERT INTO ticket_statuses (name, code, description, status, created_at)
+INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'Waiting For Customer', 'WAITING_FOR_CUSTOMER', 'Waiting for customer response', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'WAITING_FOR_CUSTOMER');
+WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'WAITING_FOR_CUSTOMER');
 
-INSERT INTO ticket_statuses (name, code, description, status, created_at)
+INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'Resolved', 'RESOLVED', 'Ticket has been resolved', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'RESOLVED');
+WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'RESOLVED');
 
-INSERT INTO ticket_statuses (name, code, description, status, created_at)
+INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'Closed', 'CLOSED', 'Ticket has been closed', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'CLOSED');
+WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'CLOSED');
 
-INSERT INTO ticket_statuses (name, code, description, status, created_at)
+INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'Reopened', 'REOPENED', 'Ticket has been reopened', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'REOPENED');
+WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'REOPENED');

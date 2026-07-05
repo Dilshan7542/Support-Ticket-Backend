@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "ai_predictions")
+@Table(name = "ai_prediction")
 public class AiPrediction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "ticket_attachments")
+@Table(name = "ticket_attachment")
 public class TicketAttachment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

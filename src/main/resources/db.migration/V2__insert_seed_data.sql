@@ -1,7 +1,7 @@
-INSERT INTO departments (name, description, status, created_at)
+INSERT INTO department (name, description, status, created_at)
 SELECT 'Technical Support', 'Technical issue handling department', 'ACTIVE', CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM departments WHERE name = 'Technical Support');
+WHERE NOT EXISTS (SELECT 1 FROM department WHERE name = 'Technical Support');
 
-INSERT INTO departments (name, description, status, created_at)
+INSERT INTO department (name, description, status, created_at)
 SELECT 'Customer Care', 'General customer support department', 'ACTIVE', CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM departments WHERE name = 'Customer Care');
+WHERE NOT EXISTS (SELECT 1 FROM department WHERE name = 'Customer Care');

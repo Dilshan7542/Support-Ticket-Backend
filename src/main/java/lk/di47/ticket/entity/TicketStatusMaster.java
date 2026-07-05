@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "ticket_statuses")
+@Table(name = "ticket_status")
 public class TicketStatusMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
