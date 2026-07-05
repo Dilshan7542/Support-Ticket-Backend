@@ -38,6 +38,30 @@ CREATE TABLE IF NOT EXISTS departments (
     INDEX idx_departments_company_id (company_id)
 );
 
+CREATE TABLE IF NOT EXISTS ticket_categories (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id BIGINT NULL,
+    department_id BIGINT NULL,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(64) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    status VARCHAR(20) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NULL,
+    INDEX idx_ticket_categories_company_id (company_id),
+    INDEX idx_ticket_categories_department_id (department_id)
+);
+
+CREATE TABLE IF NOT EXISTS ticket_statuses (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(64) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    status VARCHAR(20) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NULL
+);
+
 CREATE TABLE IF NOT EXISTS tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_no VARCHAR(50) NOT NULL UNIQUE,
@@ -47,6 +71,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     subject VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
     category VARCHAR(50),
+    category_code VARCHAR(64),
     priority VARCHAR(20) NOT NULL,
     status VARCHAR(30) NOT NULL,
     created_at DATETIME NOT NULL,
@@ -130,3 +155,31 @@ CREATE TABLE IF NOT EXISTS mail_logs (
     error_message TEXT NULL,
     created_at DATETIME NOT NULL
 );
+
+INSERT INTO ticket_statuses (name, code, description, status, created_at)
+SELECT 'New', 'NEW', 'Ticket has been created', 'ACTIVE', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'NEW');
+
+INSERT INTO ticket_statuses (name, code, description, status, created_at)
+SELECT 'Assigned', 'ASSIGNED', 'Ticket has been assigned', 'ACTIVE', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'ASSIGNED');
+
+INSERT INTO ticket_statuses (name, code, description, status, created_at)
+SELECT 'In Progress', 'IN_PROGRESS', 'Ticket is being handled', 'ACTIVE', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'IN_PROGRESS');
+
+INSERT INTO ticket_statuses (name, code, description, status, created_at)
+SELECT 'Waiting For Customer', 'WAITING_FOR_CUSTOMER', 'Waiting for customer response', 'ACTIVE', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'WAITING_FOR_CUSTOMER');
+
+INSERT INTO ticket_statuses (name, code, description, status, created_at)
+SELECT 'Resolved', 'RESOLVED', 'Ticket has been resolved', 'ACTIVE', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'RESOLVED');
+
+INSERT INTO ticket_statuses (name, code, description, status, created_at)
+SELECT 'Closed', 'CLOSED', 'Ticket has been closed', 'ACTIVE', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'CLOSED');
+
+INSERT INTO ticket_statuses (name, code, description, status, created_at)
+SELECT 'Reopened', 'REOPENED', 'Ticket has been reopened', 'ACTIVE', NOW()
+WHERE NOT EXISTS (SELECT 1 FROM ticket_statuses WHERE code = 'REOPENED');

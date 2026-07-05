@@ -38,6 +38,9 @@ public class Ticket {
     @Column(length = 50)
     private String category;
 
+    @Column(length = 64)
+    private String categoryCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private TicketPriority priority;

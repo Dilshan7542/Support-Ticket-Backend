@@ -15,6 +15,7 @@ public record TicketResponse(
         String subject,
         String description,
         String category,
+        String categoryCode,
         TicketPriority priority,
         TicketStatus status,
         LocalDateTime createdAt,

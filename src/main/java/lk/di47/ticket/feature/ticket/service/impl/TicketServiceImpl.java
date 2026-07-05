@@ -3,8 +3,11 @@ package lk.di47.ticket.feature.ticket.service.impl;
 import lk.di47.ticket.entity.AiPrediction;
 import lk.di47.ticket.entity.Ticket;
 import lk.di47.ticket.entity.TicketAttachment;
+import lk.di47.ticket.entity.TicketCategory;
 import lk.di47.ticket.entity.TicketReply;
 import lk.di47.ticket.entity.TicketStatusHistory;
+import lk.di47.ticket.exception.BusinessException;
+import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.exception.NotFoundException;
 import lk.di47.ticket.feature.ai.dto.AiPredictionRequest;
 import lk.di47.ticket.feature.ai.dto.AiPredictionResponse;
@@ -14,6 +17,7 @@ import lk.di47.ticket.feature.ticket.dto.*;
 import lk.di47.ticket.feature.ticket.service.TicketService;
 import lk.di47.ticket.repository.AiPredictionRepository;
 import lk.di47.ticket.repository.TicketAttachmentRepository;
+import lk.di47.ticket.repository.TicketCategoryRepository;
 import lk.di47.ticket.repository.TicketReplyRepository;
 import lk.di47.ticket.repository.TicketRepository;
 import lk.di47.ticket.repository.TicketStatusHistoryRepository;
@@ -41,6 +45,7 @@ import java.util.stream.Collectors;
 public class TicketServiceImpl implements TicketService {
     private final TicketRepository ticketRepository;
     private final TicketAttachmentRepository ticketAttachmentRepository;
+    private final TicketCategoryRepository ticketCategoryRepository;
     private final TicketReplyRepository ticketReplyRepository;
     private final TicketStatusHistoryRepository ticketStatusHistoryRepository;
     private final AiPredictionRepository aiPredictionRepository;
@@ -56,6 +61,7 @@ public class TicketServiceImpl implements TicketService {
         ticket.setCustomerId(request.userId());
         ticket.setSubject(request.subject());
         ticket.setDescription(request.description());
+        applyCategoryCode(ticket, request.categoryCode());
         ticket.setPriority(TicketPriority.MEDIUM);
         ticket.setStatus(TicketStatus.NEW);
         ticket.setCreatedAt(LocalDateTime.now());
@@ -172,6 +178,16 @@ public class TicketServiceImpl implements TicketService {
         resolvePriority(prediction.priority()).ifPresent(ticket::setPriority);
     }
 
+    private void applyCategoryCode(Ticket ticket, String categoryCode) {
+        if (categoryCode == null || categoryCode.isBlank()) {
+            return;
+        }
+        TicketCategory category = ticketCategoryRepository.findByCodeAndStatus(categoryCode, lk.di47.ticket.util.enums.Status.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category not found"));
+        ticket.setCategoryCode(category.getCode());
+        ticket.setCategory(category.getName());
+    }
+
     private java.util.Optional<TicketPriority> resolvePriority(String priority) {
         if (priority == null || priority.isBlank()) {
             return java.util.Optional.empty();
@@ -248,6 +264,7 @@ public class TicketServiceImpl implements TicketService {
                 ticket.getSubject(),
                 ticket.getDescription(),
                 ticket.getCategory(),
+                ticket.getCategoryCode(),
                 ticket.getPriority(),
                 ticket.getStatus(),
                 ticket.getCreatedAt(),

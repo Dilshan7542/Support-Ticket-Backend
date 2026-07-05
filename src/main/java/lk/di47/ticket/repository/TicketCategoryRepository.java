@@ -1,0 +1,15 @@
+package lk.di47.ticket.repository;
+
+import lk.di47.ticket.entity.TicketCategory;
+import lk.di47.ticket.util.enums.Status;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface TicketCategoryRepository extends JpaRepository<TicketCategory, Long> {
+    boolean existsByCode(String code);
+
+    boolean existsByCodeAndIdNot(String code, Long id);
+
+    Optional<TicketCategory> findByCodeAndStatus(String code, Status status);
+}

@@ -14,6 +14,9 @@ public record CreateTicketRequest(
 
         @NotBlank(message = "Description is required")
         @Size(max = 2000)
-        String description
+        String description,
+
+        @Size(max = 64)
+        String categoryCode
 ) {
 }
