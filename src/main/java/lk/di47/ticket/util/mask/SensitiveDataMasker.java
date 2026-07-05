@@ -5,10 +5,12 @@ package lk.di47.ticket.util.mask;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
+import lombok.extern.log4j.Log4j2;
 
 
 import java.util.Set;
 
+@Log4j2
 public final class SensitiveDataMasker {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Set<String> SENSITIVE_FIELDS = Set.of(
@@ -25,7 +27,8 @@ public final class SensitiveDataMasker {
             JsonNode root = OBJECT_MAPPER.readTree(body);
             maskNode(root);
             return OBJECT_MAPPER.writeValueAsString(root);
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.error("Unable to mask sensitive data from body -> {}", exception.getMessage(), exception);
             return body.length() > 4000 ? body.substring(0, 4000) : body;
         }
     }

@@ -95,7 +95,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             log.setCreatedAt(LocalDateTime.now());
             activityLogRepository.save(log);
         } catch (Exception exception) {
-            log.warn("Activity log save failed: {}", exception.getMessage());
+            log.error("Activity log save failed -> {}", exception.getMessage(), exception);
         }
     }
 
@@ -197,7 +197,8 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         }
         try {
             return jsonMapper.writeValueAsString(jsonMapper.readTree(truncatedBody));
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.error("Unable to format JSON for request/response log -> {}", exception.getMessage(), exception);
             return truncatedBody;
         }
     }
@@ -219,7 +220,8 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
                     && node.isObject()
                     && node.get("iv") != null
                     && node.get("cipherText") != null;
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.error("Unable to inspect encrypted payload shape -> {}", exception.getMessage(), exception);
             return false;
         }
     }
@@ -235,7 +237,8 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             }
             JsonNode node = jsonMapper.readTree(requestBody).get("userId");
             return node == null || node.isNull() ? null : node.asLong();
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.error("Unable to resolve user id from request body -> {}", exception.getMessage(), exception);
             return null;
         }
     }

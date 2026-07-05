@@ -4,6 +4,7 @@ import lk.di47.ticket.entity.MailLog;
 import lk.di47.ticket.repository.MailLogRepository;
 import lk.di47.ticket.util.enums.MailStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class MailService {
     private final JavaMailSender javaMailSender;
     private final MailLogRepository mailLogRepository;
@@ -23,10 +25,10 @@ public class MailService {
 
     @Async
     public void send(MailRequest request) {
-        MailLog log = new MailLog();
-        log.setRecipient(request.to());
-        log.setSubject(request.subject());
-        log.setCreatedAt(LocalDateTime.now());
+        MailLog mailLog = new MailLog();
+        mailLog.setRecipient(request.to());
+        mailLog.setSubject(request.subject());
+        mailLog.setCreatedAt(LocalDateTime.now());
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(from);
@@ -34,11 +36,12 @@ public class MailService {
             message.setSubject(request.subject());
             message.setText(request.body());
             javaMailSender.send(message);
-            log.setStatus(MailStatus.SENT);
+            mailLog.setStatus(MailStatus.SENT);
         } catch (Exception exception) {
-            log.setStatus(MailStatus.FAILED);
-            log.setErrorMessage(exception.getMessage());
+            log.error("Mail send failed for recipient {} -> {}", request.to(), exception.getMessage(), exception);
+            mailLog.setStatus(MailStatus.FAILED);
+            mailLog.setErrorMessage(exception.getMessage());
         }
-        mailLogRepository.save(log);
+        mailLogRepository.save(mailLog);
     }
 }

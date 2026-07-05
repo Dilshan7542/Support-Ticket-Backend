@@ -65,6 +65,7 @@ public class SecurityConfig {
                 "X-File-Name",
                 "X-Key-Id",
                 "X-Content-Encryption",
+                "X-Crypto-Action",
                 "X-Trace-Id"
         ));
         configuration.setAllowCredentials(false);

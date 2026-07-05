@@ -101,7 +101,7 @@ public class KeyExchangeServiceImpl implements KeyExchangeService {
         } catch (BusinessException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Unable to complete key exchange");
+            throw new BusinessException(ErrorCode.KEY_EXCHANGE_FAILED, "Unable to complete key exchange", exception);
         }
     }
 
@@ -122,14 +122,14 @@ public class KeyExchangeServiceImpl implements KeyExchangeService {
         } catch (BusinessException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Invalid request timestamp");
+            throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Invalid request timestamp", exception);
         }
     }
 
     @Override
     public void registerNonce(String keyId, String nonce) {
         if (nonce == null || nonce.isBlank() || nonce.length() > 200) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Invalid request nonce");
+            throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Invalid request nonce");
         }
 
         EncryptionSession session = getActiveSession(keyId);
@@ -148,7 +148,7 @@ public class KeyExchangeServiceImpl implements KeyExchangeService {
         try {
             getActiveSession(keyId).bindToUser(userId);
         } catch (IllegalStateException exception) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Encryption session belongs to another user");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Encryption session belongs to another user", exception);
         }
     }
 

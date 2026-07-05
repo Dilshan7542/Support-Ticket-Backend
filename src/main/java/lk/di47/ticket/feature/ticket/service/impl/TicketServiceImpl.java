@@ -152,7 +152,9 @@ public class TicketServiceImpl implements TicketService {
         try {
             return aiPredictionService.predictTicket(new AiPredictionRequest(request.userId(), request.description()));
         } catch (Exception exception) {
-            log.warn("AI prediction service failed. Ticket will be created with default priority. Reason: {}", exception.getMessage());
+            log.error("AI prediction service failed. Ticket will be created with default priority. Reason: {}",
+                    exception.getMessage(),
+                    exception);
             return null;
         }
     }
@@ -177,7 +179,7 @@ public class TicketServiceImpl implements TicketService {
         try {
             return java.util.Optional.of(TicketPriority.valueOf(priority.trim().toUpperCase()));
         } catch (IllegalArgumentException exception) {
-            log.warn("Invalid AI priority received: {}", priority);
+            log.error("Invalid AI priority received: {}", priority, exception);
             return java.util.Optional.empty();
         }
     }
@@ -204,7 +206,7 @@ public class TicketServiceImpl implements TicketService {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (JacksonException exception) {
-            log.warn("Unable to serialize AI prediction response: {}", exception.getMessage());
+            log.error("Unable to serialize AI prediction response: {}", exception.getMessage(), exception);
             return null;
         }
     }

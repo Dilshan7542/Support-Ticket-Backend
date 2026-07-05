@@ -47,7 +47,7 @@ public class TicketAttachmentServiceImpl implements TicketAttachmentService {
             Files.createDirectories(targetDirectory);
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception exception) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Unable to save attachment");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Unable to save attachment", exception);
         }
 
         TicketAttachment attachment = new TicketAttachment();

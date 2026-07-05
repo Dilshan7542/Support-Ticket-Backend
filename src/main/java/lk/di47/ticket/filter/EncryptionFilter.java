@@ -14,6 +14,7 @@ import lk.di47.ticket.crypto.SessionCryptoService;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.feature.security.service.KeyExchangeService;
+import lk.di47.ticket.response.ApiErrorResponseWriter;
 import lk.di47.ticket.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
@@ -27,7 +28,6 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
@@ -36,6 +36,7 @@ public class EncryptionFilter extends OncePerRequestFilter {
     private final CryptoProperties properties;
     private final KeyExchangeService keyExchangeService;
     private final SessionCryptoService sessionCryptoService;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
     private final JsonMapper jsonMapper;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -82,9 +83,13 @@ public class EncryptionFilter extends OncePerRequestFilter {
             CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request, decryptedRequest);
             filterChain.doFilter(wrappedRequest, wrappedResponse);
         } catch (BusinessException exception) {
-            writeError(wrappedResponse, resolveStatus(exception), exception.getMessage());
+            apiErrorResponseWriter.write(wrappedResponse, exception);
         } catch (Exception exception) {
-            writeError(wrappedResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to process encrypted request");
+            apiErrorResponseWriter.writeInternalServerError(
+                    wrappedResponse,
+                    "Unable to process encrypted request",
+                    exception
+            );
         }
 
         if (keyExchangeService.isActive(keyId)) {
@@ -99,10 +104,10 @@ public class EncryptionFilter extends OncePerRequestFilter {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Missing X-Key-Id header");
         }
         if (timestamp == null || timestamp.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Missing X-Timestamp header");
+            throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Missing X-Timestamp header");
         }
         if (nonce == null || nonce.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Missing X-Nonce header");
+            throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Missing X-Nonce header");
         }
     }
 
@@ -129,31 +134,5 @@ public class EncryptionFilter extends OncePerRequestFilter {
         response.setHeader(SecurityConstant.ENCRYPTION_HEADER, "AES-256-GCM");
         response.getOutputStream().write(encryptedBytes);
         response.copyBodyToResponse();
-    }
-
-    private void writeError(ContentCachingResponseWrapper response, int status, String message) throws IOException {
-        response.resetBuffer();
-        response.setStatus(status);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        if (status == HttpServletResponse.SC_CONFLICT) {
-            response.setHeader(SecurityConstant.CRYPTO_ACTION_HEADER, SecurityConstant.RENEW_KEY_EXCHANGE_ACTION);
-            jsonMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, Map.of(
-                    "code", "ENCRYPTION_SESSION_EXPIRED",
-                    "action", SecurityConstant.RENEW_KEY_EXCHANGE_ACTION
-            )));
-            return;
-        }
-        jsonMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, null));
-    }
-
-    private int resolveStatus(BusinessException exception) {
-        if (exception.getErrorCode() == ErrorCode.UNAUTHORIZED) {
-            return HttpServletResponse.SC_UNAUTHORIZED;
-        }
-        if (exception.getErrorCode() == ErrorCode.ENCRYPTION_SESSION_EXPIRED) {
-            return HttpServletResponse.SC_CONFLICT;
-        }
-        return HttpServletResponse.SC_BAD_REQUEST;
     }
 }

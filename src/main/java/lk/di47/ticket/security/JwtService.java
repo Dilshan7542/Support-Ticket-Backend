@@ -76,7 +76,7 @@ public class JwtService {
         } catch (BusinessException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Invalid token");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Invalid token", exception);
         }
     }
 
