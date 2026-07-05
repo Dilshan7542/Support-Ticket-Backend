@@ -25,25 +25,25 @@ public class CompanyController {
 
     @PostMapping(CompanyEndpoint.CREATE)
     public ApiResponse<CompanyResponse> create(@Valid @RequestBody CreateCompanyRequest request) {
-        log.debug("Company Controller -> {}", this.toJson(request));
+        log.debug("Create Company -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.CREATED, companyService.create(request));
     }
 
     @PostMapping(CompanyEndpoint.LIST)
     public ApiResponse<List<CompanyResponse>> list(@Valid @RequestBody ListCompanyRequest request) {
-        log.debug("Company Controller -> {}", this.toJson(request));
+        log.debug("List Company -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, companyService.list());
     }
 
     @PostMapping(CompanyEndpoint.DETAIL)
     public ApiResponse<CompanyResponse> detail(@Valid @RequestBody CompanyDetailRequest request) {
-        log.debug("Company Controller -> {}", this.toJson(request));
+        log.debug("Detail Company -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, companyService.detail(request));
     }
 
     @PostMapping(CompanyEndpoint.UPDATE)
     public ApiResponse<CompanyResponse> update(@Valid @RequestBody UpdateCompanyRequest request) {
-        log.debug("Company Controller -> {}", this.toJson(request));
+        log.debug("Update Company -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.UPDATED, companyService.update(request));
     }
 

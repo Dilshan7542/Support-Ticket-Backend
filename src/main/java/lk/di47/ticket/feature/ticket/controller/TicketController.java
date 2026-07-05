@@ -35,37 +35,37 @@ public class TicketController {
 
     @PostMapping(TicketEndpoint.CREATE)
     public ApiResponse<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest request) {
-        log.debug("Ticket Controller -> {}", this.toJson(request));
+        log.debug("Create Ticket -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.CREATED, ticketService.createTicket(request));
     }
 
     @PostMapping(TicketEndpoint.LIST)
     public ApiResponse<List<TicketResponse>> getTickets(@Valid @RequestBody ListTicketRequest request) {
-        log.debug("Ticket Controller -> {}", this.toJson(request));
+        log.debug("List Ticket -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, ticketService.getTickets());
     }
 
     @PostMapping(TicketEndpoint.DETAIL)
     public ApiResponse<TicketResponse> getTicket(@Valid @RequestBody TicketDetailRequest request) {
-        log.debug("Ticket Controller -> {}", this.toJson(request));
+        log.debug("Detail Ticket -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, ticketService.getTicket(request));
     }
 
     @PostMapping(TicketEndpoint.UPDATE_STATUS)
     public ApiResponse<TicketResponse> updateTicketStatus(@Valid @RequestBody UpdateTicketStatusRequest request) {
-        log.debug("Ticket Controller -> {}", this.toJson(request));
+        log.debug("Update Ticket Status -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.UPDATED, ticketService.updateStatus(request));
     }
 
     @PostMapping(TicketEndpoint.ASSIGN)
     public ApiResponse<TicketResponse> assignTicket(@Valid @RequestBody AssignTicketRequest request) {
-        log.debug("Ticket Controller -> {}", this.toJson(request));
+        log.debug("Assign Ticket -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.UPDATED, ticketService.assignTicket(request));
     }
 
     @PostMapping(TicketEndpoint.ADD_REPLY)
     public ApiResponse<Long> addReply(@Valid @RequestBody AddTicketReplyRequest request) {
-        log.debug("Ticket Controller -> {}", this.toJson(request));
+        log.debug("Add Ticket Reply -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.CREATED, ticketService.addReply(request));
     }
 

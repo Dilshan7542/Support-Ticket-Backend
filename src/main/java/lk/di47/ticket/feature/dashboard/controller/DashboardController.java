@@ -24,7 +24,7 @@ public class DashboardController {
 
     @PostMapping(DashboardEndpoint.SUMMARY)
     public ApiResponse<DashboardSummaryResponse> summary(@Valid @RequestBody DashboardRequest request) {
-        log.debug("Dashboard Controller -> {}", this.toJson(request));
+        log.debug("Dashboard Summary -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, dashboardService.getSummary(request));
     }
 

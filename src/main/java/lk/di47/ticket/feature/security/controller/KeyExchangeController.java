@@ -44,7 +44,7 @@ public class KeyExchangeController {
             @Valid @RequestBody KeyExchangeRequest request,
             @RequestHeader(value = SecurityConstant.AUTHORIZATION_HEADER, required = false) String authorization
     ) {
-        log.debug("Key Exchange Controller -> {}", this.toJson(request));
+        log.debug("Key Exchange -> {}", this.toJson(request));
         KeyExchangeResponse response = keyExchangeService.createExchange(request);
         bindToExistingUserWhenTokenIsPresent(response.keyId(), authorization);
         return ApiResponse.success(MessageConstant.SUCCESS, response);

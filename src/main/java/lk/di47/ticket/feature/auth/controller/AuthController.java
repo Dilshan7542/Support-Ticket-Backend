@@ -28,20 +28,20 @@ public class AuthController {
     @PostMapping(AuthEndpoint.LOGIN)
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request,
                                             @RequestHeader(SecurityConstant.KEY_ID_HEADER) String encryptionKeyId) {
-        log.debug("Auth Controller -> {}", this.toJson(request));
+        log.debug("Login -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, authService.login(request, encryptionKeyId));
     }
 
     @PostMapping(AuthEndpoint.REGISTER)
     public ApiResponse<Long> register(@Valid @RequestBody RegisterRequest request) {
-        log.debug("Auth Controller -> {}", this.toJson(request));
+        log.debug("Register -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.CREATED, authService.register(request));
     }
 
     @PostMapping(AuthEndpoint.REFRESH_TOKEN)
     public ApiResponse<RefreshTokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request,
                                                            @RequestHeader(SecurityConstant.KEY_ID_HEADER) String encryptionKeyId) {
-        log.debug("Auth Controller -> {}", this.toJson(request));
+        log.debug("Refresh Token -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, authService.refreshToken(request, encryptionKeyId));
     }
 
@@ -49,7 +49,7 @@ public class AuthController {
     public ApiResponse<Void> logout(@Valid @RequestBody LogoutRequest request,
                                     HttpServletRequest servletRequest,
                                     @RequestHeader(SecurityConstant.KEY_ID_HEADER) String encryptionKeyId) {
-        log.debug("Auth Controller -> {}", this.toJson(request));
+        log.debug("Logout -> {}", this.toJson(request));
         Long currentUserId = (Long) servletRequest.getAttribute(SecurityConstant.CURRENT_USER_ID);
         if (!request.userId().equals(currentUserId)) {
             throw new BusinessException(

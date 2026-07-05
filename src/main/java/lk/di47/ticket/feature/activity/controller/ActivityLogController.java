@@ -27,13 +27,13 @@ public class ActivityLogController {
 
     @PostMapping(ActivityEndpoint.LIST)
     public ApiResponse<List<ActivityLogResponse>> list(@Valid @RequestBody ActivityLogListRequest request) {
-        log.debug("Activity Log Controller -> {}", this.toJson(request));
+        log.debug("List Activity Log -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, activityLogService.list());
     }
 
     @PostMapping(ActivityEndpoint.DETAIL)
     public ApiResponse<ActivityLogResponse> detail(@Valid @RequestBody ActivityLogDetailRequest request) {
-        log.debug("Activity Log Controller -> {}", this.toJson(request));
+        log.debug("Detail Activity Log -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, activityLogService.detail(request));
     }
 

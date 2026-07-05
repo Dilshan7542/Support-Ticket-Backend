@@ -25,25 +25,25 @@ public class DepartmentController {
 
     @PostMapping(DepartmentEndpoint.CREATE)
     public ApiResponse<DepartmentResponse> create(@Valid @RequestBody CreateDepartmentRequest request) {
-        log.debug("Department Controller -> {}", this.toJson(request));
+        log.debug("Create Department -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.CREATED, departmentService.create(request));
     }
 
     @PostMapping(DepartmentEndpoint.LIST)
     public ApiResponse<List<DepartmentResponse>> list(@Valid @RequestBody ListDepartmentRequest request) {
-        log.debug("Department Controller -> {}", this.toJson(request));
+        log.debug("List Department -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, departmentService.list());
     }
 
     @PostMapping(DepartmentEndpoint.DETAIL)
     public ApiResponse<DepartmentResponse> detail(@Valid @RequestBody DepartmentDetailRequest request) {
-        log.debug("Department Controller -> {}", this.toJson(request));
+        log.debug("Detail Department -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, departmentService.detail(request));
     }
 
     @PostMapping(DepartmentEndpoint.UPDATE)
     public ApiResponse<DepartmentResponse> update(@Valid @RequestBody UpdateDepartmentRequest request) {
-        log.debug("Department Controller -> {}", this.toJson(request));
+        log.debug("Update Department -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.UPDATED, departmentService.update(request));
     }
 
