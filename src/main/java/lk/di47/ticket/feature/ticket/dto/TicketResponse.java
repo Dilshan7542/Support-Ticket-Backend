@@ -19,6 +19,7 @@ public record TicketResponse(
         TicketStatus status,
         LocalDateTime createdAt,
         List<TicketAttachmentSummary> attachments,
-        List<TicketReplyResponse> replies
+        List<TicketReplyResponse> replies,
+        List<TicketTrackingResponse> tracking
 ) {
 }

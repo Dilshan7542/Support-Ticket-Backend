@@ -15,13 +15,27 @@ CREATE TABLE IF NOT EXISTS app_users (
     updated_at DATETIME NULL
 );
 
-CREATE TABLE IF NOT EXISTS departments (
+CREATE TABLE IF NOT EXISTS companies (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL UNIQUE,
+    code VARCHAR(30) NOT NULL UNIQUE,
     description VARCHAR(255),
     status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NULL
+);
+
+CREATE TABLE IF NOT EXISTS departments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    code VARCHAR(30) NOT NULL,
+    company_id BIGINT NULL,
+    description VARCHAR(255),
+    status VARCHAR(20) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NULL,
+    UNIQUE KEY uk_departments_company_code (company_id, code),
+    INDEX idx_departments_company_id (company_id)
 );
 
 CREATE TABLE IF NOT EXISTS tickets (
@@ -116,4 +130,3 @@ CREATE TABLE IF NOT EXISTS mail_logs (
     error_message TEXT NULL,
     created_at DATETIME NOT NULL
 );
-

@@ -23,6 +23,7 @@ public final class TicketMapper {
                 ticket.getStatus(),
                 ticket.getCreatedAt(),
                 List.of(),
+                List.of(),
                 List.of()
         );
     }

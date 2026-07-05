@@ -11,6 +11,9 @@ public final class DepartmentMapper {
         return new DepartmentResponse(
                 department.getId(),
                 department.getName(),
+                department.getCode(),
+                department.getCompanyId(),
+                null,
                 department.getDescription(),
                 department.getStatus()
         );

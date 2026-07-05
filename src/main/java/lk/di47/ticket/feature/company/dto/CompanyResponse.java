@@ -1,13 +1,11 @@
-package lk.di47.ticket.feature.department.dto;
+package lk.di47.ticket.feature.company.dto;
 
 import lk.di47.ticket.util.enums.Status;
 
-public record DepartmentResponse(
+public record CompanyResponse(
         Long id,
         String name,
         String code,
-        Long companyId,
-        String companyName,
         String description,
         Status status
 ) {

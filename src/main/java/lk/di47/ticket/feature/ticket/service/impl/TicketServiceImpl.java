@@ -88,7 +88,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public TicketResponse getTicket(TicketDetailRequest request) {
         Ticket ticket = findTicket(request.ticketId());
-        return toResponse(ticket, loadAttachments(ticket.getId()), loadReplies(ticket.getId()));
+        return toResponse(ticket, loadAttachments(ticket.getId()), loadReplies(ticket.getId()), loadTracking(ticket.getId()));
     }
 
     @Override
@@ -232,12 +232,13 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private TicketResponse toResponse(Ticket ticket, List<TicketAttachmentSummary> attachments) {
-        return toResponse(ticket, attachments, List.of());
+        return toResponse(ticket, attachments, List.of(), List.of());
     }
 
     private TicketResponse toResponse(Ticket ticket,
                                       List<TicketAttachmentSummary> attachments,
-                                      List<TicketReplyResponse> replies) {
+                                      List<TicketReplyResponse> replies,
+                                      List<TicketTrackingResponse> tracking) {
         return new TicketResponse(
                 ticket.getId(),
                 ticket.getTicketNo(),
@@ -251,7 +252,8 @@ public class TicketServiceImpl implements TicketService {
                 ticket.getStatus(),
                 ticket.getCreatedAt(),
                 attachments,
-                replies
+                replies,
+                tracking
         );
     }
 
@@ -289,6 +291,23 @@ public class TicketServiceImpl implements TicketService {
                 reply.getSenderUserId(),
                 reply.getMessage(),
                 reply.getCreatedAt()
+        );
+    }
+
+    private List<TicketTrackingResponse> loadTracking(Long ticketId) {
+        return ticketStatusHistoryRepository.findByTicketIdOrderByCreatedAtAsc(ticketId).stream()
+                .map(this::toTrackingResponse)
+                .toList();
+    }
+
+    private TicketTrackingResponse toTrackingResponse(TicketStatusHistory history) {
+        return new TicketTrackingResponse(
+                history.getId(),
+                history.getPreviousStatus(),
+                history.getNewStatus(),
+                history.getChangedByUserId(),
+                history.getRemark(),
+                history.getCreatedAt()
         );
     }
 

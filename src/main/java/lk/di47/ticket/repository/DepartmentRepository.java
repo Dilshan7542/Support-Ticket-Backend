@@ -7,5 +7,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
     boolean existsByName(String name);
 
+    boolean existsByNameAndIdNot(String name, Long id);
+
+    boolean existsByCompanyIdAndName(Long companyId, String name);
+
+    boolean existsByCompanyIdAndNameAndIdNot(Long companyId, String name, Long id);
+
+    boolean existsByCompanyIdAndCode(Long companyId, String code);
+
+    boolean existsByCompanyIdAndCodeAndIdNot(Long companyId, String code, Long id);
+
+    boolean existsByCode(String code);
+
+    boolean existsByCodeAndIdNot(String code, Long id);
+
     long countByStatus(Status status);
 }
