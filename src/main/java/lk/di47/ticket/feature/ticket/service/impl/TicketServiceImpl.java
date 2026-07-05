@@ -88,7 +88,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public TicketResponse getTicket(TicketDetailRequest request) {
         Ticket ticket = findTicket(request.ticketId());
-        return toResponse(ticket, loadAttachments(ticket.getId()));
+        return toResponse(ticket, loadAttachments(ticket.getId()), loadReplies(ticket.getId()));
     }
 
     @Override
@@ -230,6 +230,12 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private TicketResponse toResponse(Ticket ticket, List<TicketAttachmentSummary> attachments) {
+        return toResponse(ticket, attachments, List.of());
+    }
+
+    private TicketResponse toResponse(Ticket ticket,
+                                      List<TicketAttachmentSummary> attachments,
+                                      List<TicketReplyResponse> replies) {
         return new TicketResponse(
                 ticket.getId(),
                 ticket.getTicketNo(),
@@ -242,7 +248,8 @@ public class TicketServiceImpl implements TicketService {
                 ticket.getPriority(),
                 ticket.getStatus(),
                 ticket.getCreatedAt(),
-                attachments
+                attachments,
+                replies
         );
     }
 
@@ -266,6 +273,21 @@ public class TicketServiceImpl implements TicketService {
 
     private TicketAttachmentSummary toAttachmentSummary(TicketAttachment attachment) {
         return new TicketAttachmentSummary(attachment.getId(), attachment.getOriginalFileName());
+    }
+
+    private List<TicketReplyResponse> loadReplies(Long ticketId) {
+        return ticketReplyRepository.findByTicketIdOrderByCreatedAtAsc(ticketId).stream()
+                .map(this::toReplyResponse)
+                .toList();
+    }
+
+    private TicketReplyResponse toReplyResponse(TicketReply reply) {
+        return new TicketReplyResponse(
+                reply.getId(),
+                reply.getSenderUserId(),
+                reply.getMessage(),
+                reply.getCreatedAt()
+        );
     }
 
 }

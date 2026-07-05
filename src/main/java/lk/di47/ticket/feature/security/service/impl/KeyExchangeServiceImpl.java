@@ -184,11 +184,11 @@ public class KeyExchangeServiceImpl implements KeyExchangeService {
 
         EncryptionSession session = sessions.get(keyId);
         if (session == null) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Unknown encryption session");
+            throw new BusinessException(ErrorCode.ENCRYPTION_SESSION_EXPIRED, "Encryption session expired. Renew key exchange.");
         }
         if (session.isExpired(Instant.now())) {
             sessions.remove(keyId, session);
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Encryption session expired");
+            throw new BusinessException(ErrorCode.ENCRYPTION_SESSION_EXPIRED, "Encryption session expired. Renew key exchange.");
         }
         return session;
     }

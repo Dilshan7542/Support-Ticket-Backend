@@ -27,6 +27,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
@@ -135,12 +136,24 @@ public class EncryptionFilter extends OncePerRequestFilter {
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        if (status == HttpServletResponse.SC_CONFLICT) {
+            response.setHeader(SecurityConstant.CRYPTO_ACTION_HEADER, SecurityConstant.RENEW_KEY_EXCHANGE_ACTION);
+            jsonMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, Map.of(
+                    "code", "ENCRYPTION_SESSION_EXPIRED",
+                    "action", SecurityConstant.RENEW_KEY_EXCHANGE_ACTION
+            )));
+            return;
+        }
         jsonMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, null));
     }
 
     private int resolveStatus(BusinessException exception) {
-        return exception.getErrorCode() == ErrorCode.UNAUTHORIZED
-                ? HttpServletResponse.SC_UNAUTHORIZED
-                : HttpServletResponse.SC_BAD_REQUEST;
+        if (exception.getErrorCode() == ErrorCode.UNAUTHORIZED) {
+            return HttpServletResponse.SC_UNAUTHORIZED;
+        }
+        if (exception.getErrorCode() == ErrorCode.ENCRYPTION_SESSION_EXPIRED) {
+            return HttpServletResponse.SC_CONFLICT;
+        }
+        return HttpServletResponse.SC_BAD_REQUEST;
     }
 }

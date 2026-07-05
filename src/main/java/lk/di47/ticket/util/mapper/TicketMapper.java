@@ -22,6 +22,7 @@ public final class TicketMapper {
                 ticket.getPriority(),
                 ticket.getStatus(),
                 ticket.getCreatedAt(),
+                List.of(),
                 List.of()
         );
     }

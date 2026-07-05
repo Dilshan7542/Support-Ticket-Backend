@@ -18,6 +18,7 @@ public record TicketResponse(
         TicketPriority priority,
         TicketStatus status,
         LocalDateTime createdAt,
-        List<TicketAttachmentSummary> attachments
+        List<TicketAttachmentSummary> attachments,
+        List<TicketReplyResponse> replies
 ) {
 }
