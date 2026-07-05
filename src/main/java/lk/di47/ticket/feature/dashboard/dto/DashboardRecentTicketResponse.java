@@ -17,7 +17,8 @@ public class DashboardRecentTicketResponse {
     private Long ticketId;
     private String ticketNo;
     private String subject;
-    private String category;
+    private String categoryName;
+    private String categoryCode;
     private TicketPriority priority;
     private TicketStatus status;
     private Long departmentId;

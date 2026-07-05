@@ -3,6 +3,7 @@ package lk.di47.ticket.feature.dashboard.service.impl;
 import lk.di47.ticket.entity.ActivityLog;
 import lk.di47.ticket.entity.Department;
 import lk.di47.ticket.entity.Ticket;
+import lk.di47.ticket.entity.TicketCategory;
 import lk.di47.ticket.feature.dashboard.dto.*;
 import lk.di47.ticket.feature.dashboard.service.DashboardService;
 import lk.di47.ticket.repository.*;
@@ -31,6 +32,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final MailLogRepository mailLogRepository;
     private final AiPredictionRepository aiPredictionRepository;
     private final ActivityLogRepository activityLogRepository;
+    private final TicketCategoryRepository ticketCategoryRepository;
 
     @Override
     public DashboardSummaryResponse getSummary(DashboardRequest request) {
@@ -43,6 +45,8 @@ public class DashboardServiceImpl implements DashboardService {
         List<Ticket> recentTickets = ticketRepository.findTop10ByOrderByCreatedAtDesc();
         Map<Long, String> departmentNames = departmentRepository.findAll().stream()
                 .collect(Collectors.toMap(Department::getId, Department::getName));
+        Map<String, String> categoryNames = ticketCategoryRepository.findAll().stream()
+                .collect(Collectors.toMap(TicketCategory::getCode, TicketCategory::getName));
 
         return DashboardSummaryResponse.builder()
                 .dateFrom(dateFrom)
@@ -50,10 +54,10 @@ public class DashboardServiceImpl implements DashboardService {
                 .cardMetrics(buildCardMetrics())
                 .ticketsByStatus(buildStatusMetrics())
                 .ticketsByPriority(buildPriorityMetrics())
-                .ticketsByCategory(buildCategoryMetrics(periodTickets))
+                .ticketsByCategory(buildCategoryMetrics(periodTickets, categoryNames))
                 .ticketsByDepartment(buildDepartmentMetrics(periodTickets, departmentNames))
                 .dailyTicketTrend(buildDailyTrend(dateFrom, dateTo, periodTickets))
-                .recentTickets(buildRecentTickets(recentTickets, departmentNames))
+                .recentTickets(buildRecentTickets(recentTickets, departmentNames, categoryNames))
                 .recentActivities(buildRecentActivities())
                 .build();
     }
@@ -108,9 +112,9 @@ public class DashboardServiceImpl implements DashboardService {
                 .toList();
     }
 
-    private List<DashboardMetricResponse> buildCategoryMetrics(List<Ticket> tickets) {
+    private List<DashboardMetricResponse> buildCategoryMetrics(List<Ticket> tickets, Map<String, String> categoryNames) {
         Map<String, Long> metrics = tickets.stream()
-                .map(ticket -> ticket.getCategory() == null || ticket.getCategory().isBlank() ? "UNCATEGORIZED" : ticket.getCategory())
+                .map(ticket -> resolveCategoryName(ticket.getCategoryCode(), categoryNames))
                 .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
         return toSortedMetricList(metrics);
     }
@@ -136,13 +140,16 @@ public class DashboardServiceImpl implements DashboardService {
         return trend;
     }
 
-    private List<DashboardRecentTicketResponse> buildRecentTickets(List<Ticket> tickets, Map<Long, String> departmentNames) {
+    private List<DashboardRecentTicketResponse> buildRecentTickets(List<Ticket> tickets,
+                                                                   Map<Long, String> departmentNames,
+                                                                   Map<String, String> categoryNames) {
         return tickets.stream()
                 .map(ticket -> DashboardRecentTicketResponse.builder()
                         .ticketId(ticket.getId())
                         .ticketNo(ticket.getTicketNo())
                         .subject(ticket.getSubject())
-                        .category(ticket.getCategory())
+                        .categoryName(resolveCategoryName(ticket.getCategoryCode(), categoryNames))
+                        .categoryCode(ticket.getCategoryCode())
                         .priority(ticket.getPriority())
                         .status(ticket.getStatus())
                         .departmentId(ticket.getDepartmentId())
@@ -177,6 +184,13 @@ public class DashboardServiceImpl implements DashboardService {
             return "UNASSIGNED";
         }
         return departmentNames.getOrDefault(departmentId, "UNKNOWN");
+    }
+
+    private String resolveCategoryName(String categoryCode, Map<String, String> categoryNames) {
+        if (categoryCode == null || categoryCode.isBlank()) {
+            return "UNCATEGORIZED";
+        }
+        return categoryNames.getOrDefault(categoryCode, categoryCode);
     }
 
     private List<DashboardMetricResponse> toSortedMetricList(Map<String, Long> metrics) {

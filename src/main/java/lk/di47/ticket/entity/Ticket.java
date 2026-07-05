@@ -35,10 +35,7 @@ public class Ticket {
     @Column(nullable = false)
     private String description;
 
-    @Column(length = 50)
-    private String category;
-
-    @Column(length = 64)
+    @Column(name = "category_code", length = 64)
     private String categoryCode;
 
     @Enumerated(EnumType.STRING)

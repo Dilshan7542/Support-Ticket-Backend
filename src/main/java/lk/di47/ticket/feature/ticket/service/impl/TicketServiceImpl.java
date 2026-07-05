@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -86,15 +87,21 @@ public class TicketServiceImpl implements TicketService {
     public List<TicketResponse> getTickets() {
         List<Ticket> tickets = ticketRepository.findAll();
         Map<Long, List<TicketAttachmentSummary>> attachmentsByTicketId = loadAttachmentsByTicketId(tickets);
+        Map<String, String> categoryNamesByCode = loadCategoryNamesByCode(tickets);
         return tickets.stream()
-                .map(ticket -> toResponse(ticket, attachmentsByTicketId.getOrDefault(ticket.getId(), List.of())))
+                .map(ticket -> toResponse(
+                        ticket,
+                        resolveCategoryName(ticket.getCategoryCode(), categoryNamesByCode),
+                        attachmentsByTicketId.getOrDefault(ticket.getId(), List.of())
+                ))
                 .toList();
     }
 
     @Override
     public TicketResponse getTicket(TicketDetailRequest request) {
         Ticket ticket = findTicket(request.ticketId());
-        return toResponse(ticket, loadAttachments(ticket.getId()), loadReplies(ticket.getId()), loadTracking(ticket.getId()));
+        String categoryName = resolveCategoryName(ticket.getCategoryCode(), Map.of());
+        return toResponse(ticket, categoryName, loadAttachments(ticket.getId()), loadReplies(ticket.getId()), loadTracking(ticket.getId()));
     }
 
     @Override
@@ -169,9 +176,6 @@ public class TicketServiceImpl implements TicketService {
         if (prediction == null) {
             return;
         }
-        if (prediction.category() != null && !prediction.category().isBlank()) {
-            ticket.setCategory(prediction.category());
-        }
         if (prediction.suggestedDepartmentId() != null) {
             ticket.setDepartmentId(prediction.suggestedDepartmentId());
         }
@@ -185,7 +189,6 @@ public class TicketServiceImpl implements TicketService {
         TicketCategory category = ticketCategoryRepository.findByCodeAndStatus(categoryCode, lk.di47.ticket.util.enums.Status.ACTIVE)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category not found"));
         ticket.setCategoryCode(category.getCode());
-        ticket.setCategory(category.getName());
     }
 
     private java.util.Optional<TicketPriority> resolvePriority(String priority) {
@@ -244,14 +247,16 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private TicketResponse toResponse(Ticket ticket) {
-        return toResponse(ticket, loadAttachments(ticket.getId()), loadReplies(ticket.getId()), loadTracking(ticket.getId()));
+        String categoryName = resolveCategoryName(ticket.getCategoryCode(), Map.of());
+        return toResponse(ticket, categoryName, loadAttachments(ticket.getId()), loadReplies(ticket.getId()), loadTracking(ticket.getId()));
     }
 
-    private TicketResponse toResponse(Ticket ticket, List<TicketAttachmentSummary> attachments) {
-        return toResponse(ticket, attachments, List.of(), List.of());
+    private TicketResponse toResponse(Ticket ticket, String categoryName, List<TicketAttachmentSummary> attachments) {
+        return toResponse(ticket, categoryName, attachments, List.of(), List.of());
     }
 
     private TicketResponse toResponse(Ticket ticket,
+                                      String categoryName,
                                       List<TicketAttachmentSummary> attachments,
                                       List<TicketReplyResponse> replies,
                                       List<TicketTrackingResponse> tracking) {
@@ -263,8 +268,8 @@ public class TicketServiceImpl implements TicketService {
                 ticket.getAssignedStaffId(),
                 ticket.getSubject(),
                 ticket.getDescription(),
-                ticket.getCategory(),
                 ticket.getCategoryCode(),
+                categoryName,
                 ticket.getPriority(),
                 ticket.getStatus(),
                 ticket.getCreatedAt(),
@@ -290,6 +295,33 @@ public class TicketServiceImpl implements TicketService {
                         TicketAttachment::getTicketId,
                         Collectors.mapping(this::toAttachmentSummary, Collectors.toList())
                 ));
+    }
+
+    private Map<String, String> loadCategoryNamesByCode(List<Ticket> tickets) {
+        List<String> categoryCodes = tickets.stream()
+                .map(Ticket::getCategoryCode)
+                .filter(Objects::nonNull)
+                .filter(code -> !code.isBlank())
+                .distinct()
+                .toList();
+        if (categoryCodes.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return ticketCategoryRepository.findByCodeIn(categoryCodes).stream()
+                .collect(Collectors.toMap(TicketCategory::getCode, TicketCategory::getName));
+    }
+
+    private String resolveCategoryName(String categoryCode, Map<String, String> categoryNamesByCode) {
+        if (categoryCode == null || categoryCode.isBlank()) {
+            return null;
+        }
+        String categoryName = categoryNamesByCode.get(categoryCode);
+        if (categoryName != null) {
+            return categoryName;
+        }
+        return ticketCategoryRepository.findByCodeAndStatus(categoryCode, lk.di47.ticket.util.enums.Status.ACTIVE)
+                .map(TicketCategory::getName)
+                .orElse(null);
     }
 
     private TicketAttachmentSummary toAttachmentSummary(TicketAttachment attachment) {

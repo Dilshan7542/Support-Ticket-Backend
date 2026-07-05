@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS tickets (
     assigned_staff_id BIGINT NULL,
     subject VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
-    category VARCHAR(50),
     category_code VARCHAR(64),
     priority VARCHAR(20) NOT NULL,
     status VARCHAR(30) NOT NULL,
