@@ -111,7 +111,7 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
             return;
         }
 
-        log.debug("URL -> {} {}", request.getMethod(), getRequestUrl(request));
+        log.debug("\n\n\nURL -> {} {}", request.getMethod(), getRequestUrl(request));
         log.debug("Headers -> [{}]", formatHeaders(request));
         log.debug("Request Body -> {}", formatJsonForLog(maskedRequestBody));
         log.debug("Response Status -> {}", response.getStatus());
