@@ -16,18 +16,23 @@ import lk.di47.ticket.security.JwtService;
 import lk.di47.ticket.security.JwtTokenData;
 import lk.di47.ticket.util.enums.Status;
 import lk.di47.ticket.util.enums.TokenType;
+import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.json.JsonMapper;
 
 @RestController
 @RequiredArgsConstructor
+@Log4j2
 public class KeyExchangeController {
     private final KeyExchangeService keyExchangeService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final JsonMapper jsonMapper;
 
     /**
      * This is the only API that is intentionally not AES encrypted. It establishes the key used by all other APIs.
@@ -39,6 +44,7 @@ public class KeyExchangeController {
             @Valid @RequestBody KeyExchangeRequest request,
             @RequestHeader(value = SecurityConstant.AUTHORIZATION_HEADER, required = false) String authorization
     ) {
+        log.debug("Key Exchange Controller -> {}", this.toJson(request));
         KeyExchangeResponse response = keyExchangeService.createExchange(request);
         bindToExistingUserWhenTokenIsPresent(response.keyId(), authorization);
         return ApiResponse.success(MessageConstant.SUCCESS, response);
@@ -74,5 +80,9 @@ public class KeyExchangeController {
             keyExchangeService.invalidate(keyId);
             throw exception;
         }
+    }
+
+    private String toJson(Object data) {
+        return SensitiveDataMasker.mask(jsonMapper.writeValueAsString(data));
     }
 }

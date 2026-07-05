@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="LOG_PATTERN">[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [%X{traceId}] [%t] [%C{1}:%L] [%c{36}] %m%n</Property>
+        <Property name="LOG_PATTERN">[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5p] [%X{traceId}] [%t] [%C{1}:%L] [%c{36}] %m%n%throwable</Property>
         <Property name="LOG_DIR">D:/support-ticket-backend-logs</Property>
         <Property name="LOG_FILE">support-ticket-backend.log</Property>
     </Properties>

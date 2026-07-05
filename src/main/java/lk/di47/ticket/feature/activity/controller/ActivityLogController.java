@@ -8,25 +8,36 @@ import lk.di47.ticket.feature.activity.dto.ActivityLogListRequest;
 import lk.di47.ticket.feature.activity.dto.ActivityLogResponse;
 import lk.di47.ticket.feature.activity.service.ActivityLogService;
 import lk.di47.ticket.response.ApiResponse;
+import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Log4j2
 public class ActivityLogController {
     private final ActivityLogService activityLogService;
+    private final JsonMapper jsonMapper;
 
     @PostMapping(ActivityEndpoint.LIST)
     public ApiResponse<List<ActivityLogResponse>> list(@Valid @RequestBody ActivityLogListRequest request) {
+        log.debug("Activity Log Controller -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, activityLogService.list());
     }
 
     @PostMapping(ActivityEndpoint.DETAIL)
     public ApiResponse<ActivityLogResponse> detail(@Valid @RequestBody ActivityLogDetailRequest request) {
+        log.debug("Activity Log Controller -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.SUCCESS, activityLogService.detail(request));
+    }
+
+    private String toJson(Object data) {
+        return SensitiveDataMasker.mask(jsonMapper.writeValueAsString(data));
     }
 }
