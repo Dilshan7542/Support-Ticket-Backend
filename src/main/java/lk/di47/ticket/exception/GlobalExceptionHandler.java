@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -63,6 +64,26 @@ public class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(ApiResponse.failed(exception.getMessage(), data));
         }
         return ResponseEntity.ok(ApiResponse.failed(exception.getMessage(), data));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMessageNotReadable(HttpMessageNotReadableException exception,
+                                                                        HttpServletRequest request) {
+        log.error("Invalid request body for {} {} -> {}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getMessage(),
+                exception);
+        String message = "Invalid request body";
+        Map<String, Object> data = apiErrorResponseWriter.displayableErrorData(
+                ErrorCode.INVALID_REQUEST,
+                message,
+                null
+        );
+        if (SecurityEndpoint.KEY_EXCHANGE.equals(request.getRequestURI())) {
+            return ResponseEntity.badRequest().body(ApiResponse.failed(message, data));
+        }
+        return ResponseEntity.ok(ApiResponse.failed(message, data));
     }
 
     @ExceptionHandler(Exception.class)

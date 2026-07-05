@@ -59,6 +59,15 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
 
         try {
             filterChain.doFilter(wrappedRequest, wrappedResponse);
+        } catch (Exception exception) {
+            String requestBody = isMultipartRequest(request) ? null : resolveRequestBody(request, wrappedRequest);
+            log.error("Request filter chain failed for {} {} with body {} -> {}",
+                    request.getMethod(),
+                    getRequestUrl(request),
+                    SensitiveDataMasker.mask(requestBody),
+                    exception.getMessage(),
+                    exception);
+            throw exception;
         } finally {
             long executionTimeMs = System.currentTimeMillis() - start;
             String requestBody = isMultipartRequest(request) ? null : resolveRequestBody(request, wrappedRequest);

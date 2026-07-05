@@ -228,7 +228,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private TicketResponse toResponse(Ticket ticket) {
-        return toResponse(ticket, loadAttachments(ticket.getId()));
+        return toResponse(ticket, loadAttachments(ticket.getId()), loadReplies(ticket.getId()), loadTracking(ticket.getId()));
     }
 
     private TicketResponse toResponse(Ticket ticket, List<TicketAttachmentSummary> attachments) {
