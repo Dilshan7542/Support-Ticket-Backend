@@ -1,5 +1,6 @@
 package lk.di47.ticket.feature.ticketcategory.service.impl;
 
+import lk.di47.ticket.entity.Department;
 import lk.di47.ticket.entity.TicketCategory;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
@@ -27,14 +28,14 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
     @Override
     @Transactional
     public TicketCategoryResponse create(CreateTicketCategoryRequest request) {
-        validateParents(request.companyId(), request.departmentId());
+        ParentMapping parentMapping = validateParents(request.companyId(), request.departmentId());
         if (ticketCategoryRepository.existsByCode(request.code())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category code already exists");
         }
 
         TicketCategory category = new TicketCategory();
-        category.setCompanyId(request.companyId());
-        category.setDepartmentId(request.departmentId());
+        category.setCompanyId(parentMapping.companyId());
+        category.setDepartmentId(parentMapping.departmentId());
         category.setName(request.name());
         category.setCode(request.code());
         category.setDescription(request.description());
@@ -60,13 +61,13 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
     @Transactional
     public TicketCategoryResponse update(UpdateTicketCategoryRequest request) {
         TicketCategory category = findCategory(request.categoryId());
-        validateParents(request.companyId(), request.departmentId());
+        ParentMapping parentMapping = validateParents(request.companyId(), request.departmentId());
         if (ticketCategoryRepository.existsByCodeAndIdNot(request.code(), category.getId())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category code already exists");
         }
 
-        category.setCompanyId(request.companyId());
-        category.setDepartmentId(request.departmentId());
+        category.setCompanyId(parentMapping.companyId());
+        category.setDepartmentId(parentMapping.departmentId());
         category.setName(request.name());
         category.setCode(request.code());
         category.setDescription(request.description());
@@ -82,13 +83,21 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
                 .orElseThrow(() -> new NotFoundException("Ticket category not found"));
     }
 
-    private void validateParents(Long companyId, Long departmentId) {
-        if (companyId != null && !companyRepository.existsById(companyId)) {
+    private ParentMapping validateParents(Long companyId, Long departmentId) {
+        Long resolvedCompanyId = companyId;
+        if (departmentId != null) {
+            Department department = departmentRepository.findById(departmentId)
+                    .orElseThrow(() -> new NotFoundException("Department not found"));
+            if (resolvedCompanyId == null) {
+                resolvedCompanyId = department.getCompanyId();
+            } else if (department.getCompanyId() != null && !resolvedCompanyId.equals(department.getCompanyId())) {
+                throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department does not belong to selected company");
+            }
+        }
+        if (resolvedCompanyId != null && !companyRepository.existsById(resolvedCompanyId)) {
             throw new NotFoundException("Company not found");
         }
-        if (departmentId != null && !departmentRepository.existsById(departmentId)) {
-            throw new NotFoundException("Department not found");
-        }
+        return new ParentMapping(resolvedCompanyId, departmentId);
     }
 
     private TicketCategoryResponse toResponse(TicketCategory category) {
@@ -101,5 +110,8 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
                 category.getDescription(),
                 category.getStatus()
         );
+    }
+
+    private record ParentMapping(Long companyId, Long departmentId) {
     }
 }

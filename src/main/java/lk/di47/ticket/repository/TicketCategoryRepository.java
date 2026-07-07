@@ -16,4 +16,6 @@ public interface TicketCategoryRepository extends JpaRepository<TicketCategory, 
     Optional<TicketCategory> findByCodeAndStatus(String code, Status status);
 
     List<TicketCategory> findByCodeIn(Collection<String> codes);
+
+    List<TicketCategory> findByIdIn(Collection<Long> ids);
 }

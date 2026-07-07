@@ -25,7 +25,9 @@ public class Ticket {
     @Column(nullable = false)
     private Long customerId;
 
+    private Long companyId;
     private Long departmentId;
+    private Long categoryId;
     private Long assignedStaffId;
 
     @Column(nullable = false, length = 150)
