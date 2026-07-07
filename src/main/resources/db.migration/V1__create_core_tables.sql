@@ -1,5 +1,4 @@
-
-
+drop database if exists ticket_v1;
 CREATE TABLE IF NOT EXISTS app_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,

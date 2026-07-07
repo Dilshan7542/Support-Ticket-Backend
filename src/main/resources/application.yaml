@@ -4,7 +4,7 @@ spring:
   profiles:
     active: dev
   datasource:
-    url: jdbc:mysql://localhost:3306/ticket_v1?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Colombo
+    url: jdbc:mysql://localhost:3306/ticket_v2?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Colombo
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 1234
