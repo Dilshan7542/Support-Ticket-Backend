@@ -3,6 +3,8 @@ package lk.di47.ticket.repository;
 import lk.di47.ticket.entity.Ticket;
 import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
@@ -24,5 +26,5 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     List<Ticket> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
 
-    List<Ticket> findByCustomerId(Long customerId);
+    Page<Ticket> findByCustomerId(Long customerId, Pageable pageable);
 }

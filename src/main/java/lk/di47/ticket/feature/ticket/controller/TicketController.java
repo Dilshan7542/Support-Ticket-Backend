@@ -11,6 +11,7 @@ import lk.di47.ticket.feature.ticket.dto.*;
 import lk.di47.ticket.feature.ticket.service.TicketAttachmentService;
 import lk.di47.ticket.feature.ticket.service.TicketService;
 import lk.di47.ticket.response.ApiResponse;
+import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,8 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,8 +45,8 @@ public class TicketController {
     }
 
     @PostMapping(TicketEndpoint.LIST)
-    public ApiResponse<List<TicketResponse>> getTickets(@Valid @RequestBody ListTicketRequest request,
-                                                        HttpServletRequest servletRequest) {
+    public ApiResponse<PageResponse<TicketResponse>> getTickets(@Valid @RequestBody ListTicketRequest request,
+                                                                HttpServletRequest servletRequest) {
         log.debug("List Ticket -> {}", this.toJson(request));
         validateCurrentUser(request.userId(), servletRequest);
         return ApiResponse.success(MessageConstant.SUCCESS, ticketService.getTickets(request));

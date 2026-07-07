@@ -6,6 +6,7 @@ import lk.di47.ticket.constant.endpoint.DepartmentEndpoint;
 import lk.di47.ticket.feature.department.dto.*;
 import lk.di47.ticket.feature.department.service.DepartmentService;
 import lk.di47.ticket.response.ApiResponse;
+import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,9 +29,9 @@ public class DepartmentController {
     }
 
     @PostMapping(DepartmentEndpoint.LIST)
-    public ApiResponse<List<DepartmentResponse>> list(@Valid @RequestBody ListDepartmentRequest request) {
+    public ApiResponse<PageResponse<DepartmentResponse>> list(@Valid @RequestBody ListDepartmentRequest request) {
         log.debug("List Department -> {}", this.toJson(request));
-        return ApiResponse.success(MessageConstant.SUCCESS, departmentService.list());
+        return ApiResponse.success(MessageConstant.SUCCESS, departmentService.list(request));
     }
 
     @PostMapping(DepartmentEndpoint.DETAIL)

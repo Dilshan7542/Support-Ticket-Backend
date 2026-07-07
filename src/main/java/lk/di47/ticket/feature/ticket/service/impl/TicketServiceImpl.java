@@ -22,6 +22,8 @@ import lk.di47.ticket.repository.TicketReplyRepository;
 import lk.di47.ticket.repository.TicketRepository;
 import lk.di47.ticket.repository.TicketStatusHistoryRepository;
 import lk.di47.ticket.repository.UserRepository;
+import lk.di47.ticket.response.PageResponse;
+import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.NotificationType;
 import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
@@ -29,6 +31,7 @@ import lk.di47.ticket.util.enums.UserRole;
 import lk.di47.ticket.util.generator.TicketNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
@@ -87,20 +90,21 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public List<TicketResponse> getTickets(ListTicketRequest request) {
+    public PageResponse<TicketResponse> getTickets(ListTicketRequest request) {
         UserRole requesterRole = resolveUserRole(request.userId());
-        List<Ticket> tickets = requesterRole == UserRole.CUSTOMER
-                ? ticketRepository.findByCustomerId(request.userId())
-                : ticketRepository.findAll();
-        Map<Long, List<TicketAttachmentSummary>> attachmentsByTicketId = loadAttachmentsByTicketId(tickets);
-        Map<String, String> categoryNamesByCode = loadCategoryNamesByCode(tickets);
-        return tickets.stream()
-                .map(ticket -> toResponse(
+        Page<Ticket> tickets = requesterRole == UserRole.CUSTOMER
+                ? ticketRepository.findByCustomerId(request.userId(), PaginationUtil.toPageable(request.page(), request.size()))
+                : ticketRepository.findAll(PaginationUtil.toPageable(request.page(), request.size()));
+        Map<Long, List<TicketAttachmentSummary>> attachmentsByTicketId = loadAttachmentsByTicketId(tickets.getContent());
+        Map<String, String> categoryNamesByCode = loadCategoryNamesByCode(tickets.getContent());
+        return PageResponse.from(
+                tickets,
+                ticket -> toResponse(
                         ticket,
                         resolveCategoryName(ticket.getCategoryCode(), categoryNamesByCode),
                         attachmentsByTicketId.getOrDefault(ticket.getId(), List.of())
-                ))
-                .toList();
+                )
+        );
     }
 
     @Override

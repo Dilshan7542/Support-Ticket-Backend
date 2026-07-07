@@ -9,14 +9,14 @@ import lk.di47.ticket.feature.ticketcategory.service.TicketCategoryService;
 import lk.di47.ticket.repository.CompanyRepository;
 import lk.di47.ticket.repository.DepartmentRepository;
 import lk.di47.ticket.repository.TicketCategoryRepository;
+import lk.di47.ticket.response.PageResponse;
+import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class TicketCategoryServiceImpl implements TicketCategoryService {
@@ -44,8 +44,11 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
     }
 
     @Override
-    public List<TicketCategoryResponse> list() {
-        return ticketCategoryRepository.findAll().stream().map(this::toResponse).toList();
+    public PageResponse<TicketCategoryResponse> list(ListTicketCategoryRequest request) {
+        return PageResponse.from(
+                ticketCategoryRepository.findAll(PaginationUtil.toPageable(request.page(), request.size())),
+                this::toResponse
+        );
     }
 
     @Override

@@ -3,13 +3,15 @@ package lk.di47.ticket.feature.activity.service.impl;
 import lk.di47.ticket.entity.ActivityLog;
 import lk.di47.ticket.exception.NotFoundException;
 import lk.di47.ticket.feature.activity.dto.ActivityLogDetailRequest;
+import lk.di47.ticket.feature.activity.dto.ActivityLogListRequest;
 import lk.di47.ticket.feature.activity.dto.ActivityLogResponse;
 import lk.di47.ticket.feature.activity.service.ActivityLogService;
 import lk.di47.ticket.repository.ActivityLogRepository;
+import lk.di47.ticket.response.PageResponse;
+import lk.di47.ticket.util.PaginationUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,8 +19,15 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     private final ActivityLogRepository activityLogRepository;
 
     @Override
-    public List<ActivityLogResponse> list() {
-        return activityLogRepository.findTop100ByOrderByCreatedAtDesc().stream().map(this::toResponse).toList();
+    public PageResponse<ActivityLogResponse> list(ActivityLogListRequest request) {
+        return PageResponse.from(
+                activityLogRepository.findAll(PaginationUtil.toPageable(
+                        request.page(),
+                        request.size(),
+                        Sort.by(Sort.Direction.DESC, "createdAt")
+                )),
+                this::toResponse
+        );
     }
 
     @Override

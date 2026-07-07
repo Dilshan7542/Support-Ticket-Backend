@@ -1,12 +1,12 @@
 package lk.di47.ticket.feature.activity.service;
 
 import lk.di47.ticket.feature.activity.dto.ActivityLogDetailRequest;
+import lk.di47.ticket.feature.activity.dto.ActivityLogListRequest;
 import lk.di47.ticket.feature.activity.dto.ActivityLogResponse;
-
-import java.util.List;
+import lk.di47.ticket.response.PageResponse;
 
 public interface ActivityLogService {
-    List<ActivityLogResponse> list();
+    PageResponse<ActivityLogResponse> list(ActivityLogListRequest request);
 
     ActivityLogResponse detail(ActivityLogDetailRequest request);
 }

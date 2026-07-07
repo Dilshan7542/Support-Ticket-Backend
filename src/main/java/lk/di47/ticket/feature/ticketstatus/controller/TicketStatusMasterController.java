@@ -6,6 +6,7 @@ import lk.di47.ticket.constant.endpoint.TicketStatusEndpoint;
 import lk.di47.ticket.feature.ticketstatus.dto.*;
 import lk.di47.ticket.feature.ticketstatus.service.TicketStatusMasterService;
 import lk.di47.ticket.response.ApiResponse;
+import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,9 +29,9 @@ public class TicketStatusMasterController {
     }
 
     @PostMapping(TicketStatusEndpoint.LIST)
-    public ApiResponse<List<TicketStatusMasterResponse>> list(@Valid @RequestBody ListTicketStatusRequest request) {
+    public ApiResponse<PageResponse<TicketStatusMasterResponse>> list(@Valid @RequestBody ListTicketStatusRequest request) {
         log.debug("List Ticket Status -> {}", this.toJson(request));
-        return ApiResponse.success(MessageConstant.SUCCESS, ticketStatusMasterService.list());
+        return ApiResponse.success(MessageConstant.SUCCESS, ticketStatusMasterService.list(request));
     }
 
     @PostMapping(TicketStatusEndpoint.DETAIL)

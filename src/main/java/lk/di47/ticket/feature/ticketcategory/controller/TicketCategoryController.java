@@ -6,6 +6,7 @@ import lk.di47.ticket.constant.endpoint.TicketCategoryEndpoint;
 import lk.di47.ticket.feature.ticketcategory.dto.*;
 import lk.di47.ticket.feature.ticketcategory.service.TicketCategoryService;
 import lk.di47.ticket.response.ApiResponse;
+import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,9 +29,9 @@ public class TicketCategoryController {
     }
 
     @PostMapping(TicketCategoryEndpoint.LIST)
-    public ApiResponse<List<TicketCategoryResponse>> list(@Valid @RequestBody ListTicketCategoryRequest request) {
+    public ApiResponse<PageResponse<TicketCategoryResponse>> list(@Valid @RequestBody ListTicketCategoryRequest request) {
         log.debug("List Ticket Category -> {}", this.toJson(request));
-        return ApiResponse.success(MessageConstant.SUCCESS, ticketCategoryService.list());
+        return ApiResponse.success(MessageConstant.SUCCESS, ticketCategoryService.list(request));
     }
 
     @PostMapping(TicketCategoryEndpoint.DETAIL)

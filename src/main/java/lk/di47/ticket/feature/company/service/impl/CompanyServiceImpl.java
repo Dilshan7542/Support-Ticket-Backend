@@ -7,17 +7,18 @@ import lk.di47.ticket.exception.NotFoundException;
 import lk.di47.ticket.feature.company.dto.CompanyDetailRequest;
 import lk.di47.ticket.feature.company.dto.CompanyResponse;
 import lk.di47.ticket.feature.company.dto.CreateCompanyRequest;
+import lk.di47.ticket.feature.company.dto.ListCompanyRequest;
 import lk.di47.ticket.feature.company.dto.UpdateCompanyRequest;
 import lk.di47.ticket.feature.company.service.CompanyService;
 import lk.di47.ticket.repository.CompanyRepository;
+import lk.di47.ticket.response.PageResponse;
+import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
@@ -43,8 +44,11 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public List<CompanyResponse> list() {
-        return companyRepository.findAll().stream().map(this::toResponse).toList();
+    public PageResponse<CompanyResponse> list(ListCompanyRequest request) {
+        return PageResponse.from(
+                companyRepository.findAll(PaginationUtil.toPageable(request.page(), request.size())),
+                this::toResponse
+        );
     }
 
     @Override

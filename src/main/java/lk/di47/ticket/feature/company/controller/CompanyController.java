@@ -6,6 +6,7 @@ import lk.di47.ticket.constant.endpoint.CompanyEndpoint;
 import lk.di47.ticket.feature.company.dto.*;
 import lk.di47.ticket.feature.company.service.CompanyService;
 import lk.di47.ticket.response.ApiResponse;
+import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.json.JsonMapper;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,9 +29,9 @@ public class CompanyController {
     }
 
     @PostMapping(CompanyEndpoint.LIST)
-    public ApiResponse<List<CompanyResponse>> list(@Valid @RequestBody ListCompanyRequest request) {
+    public ApiResponse<PageResponse<CompanyResponse>> list(@Valid @RequestBody ListCompanyRequest request) {
         log.debug("List Company -> {}", this.toJson(request));
-        return ApiResponse.success(MessageConstant.SUCCESS, companyService.list());
+        return ApiResponse.success(MessageConstant.SUCCESS, companyService.list(request));
     }
 
     @PostMapping(CompanyEndpoint.DETAIL)

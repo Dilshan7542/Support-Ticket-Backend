@@ -4,6 +4,9 @@ import jakarta.validation.constraints.NotNull;
 
 public record ListTicketRequest(
         @NotNull(message = "userId is required")
-        Long userId
+        Long userId,
+
+        Integer page,
+        Integer size
 ) {
 }

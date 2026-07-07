@@ -7,14 +7,14 @@ import lk.di47.ticket.exception.NotFoundException;
 import lk.di47.ticket.feature.ticketstatus.dto.*;
 import lk.di47.ticket.feature.ticketstatus.service.TicketStatusMasterService;
 import lk.di47.ticket.repository.TicketStatusMasterRepository;
+import lk.di47.ticket.response.PageResponse;
+import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class TicketStatusMasterServiceImpl implements TicketStatusMasterService {
@@ -37,8 +37,11 @@ public class TicketStatusMasterServiceImpl implements TicketStatusMasterService 
     }
 
     @Override
-    public List<TicketStatusMasterResponse> list() {
-        return ticketStatusMasterRepository.findAll().stream().map(this::toResponse).toList();
+    public PageResponse<TicketStatusMasterResponse> list(ListTicketStatusRequest request) {
+        return PageResponse.from(
+                ticketStatusMasterRepository.findAll(PaginationUtil.toPageable(request.page(), request.size())),
+                this::toResponse
+        );
     }
 
     @Override

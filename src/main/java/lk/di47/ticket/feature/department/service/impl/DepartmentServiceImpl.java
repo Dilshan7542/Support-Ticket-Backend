@@ -8,12 +8,16 @@ import lk.di47.ticket.exception.NotFoundException;
 import lk.di47.ticket.feature.department.dto.CreateDepartmentRequest;
 import lk.di47.ticket.feature.department.dto.DepartmentDetailRequest;
 import lk.di47.ticket.feature.department.dto.DepartmentResponse;
+import lk.di47.ticket.feature.department.dto.ListDepartmentRequest;
 import lk.di47.ticket.feature.department.dto.UpdateDepartmentRequest;
 import lk.di47.ticket.feature.department.service.DepartmentService;
 import lk.di47.ticket.repository.CompanyRepository;
 import lk.di47.ticket.repository.DepartmentRepository;
+import lk.di47.ticket.response.PageResponse;
+import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.Status;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,12 +55,10 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
-    public List<DepartmentResponse> list() {
-        List<Department> departments = departmentRepository.findAll();
-        Map<Long, Company> companiesById = loadCompaniesById(departments);
-        return departments.stream()
-                .map(department -> toResponse(department, companiesById.get(department.getCompanyId())))
-                .toList();
+    public PageResponse<DepartmentResponse> list(ListDepartmentRequest request) {
+        Page<Department> departments = departmentRepository.findAll(PaginationUtil.toPageable(request.page(), request.size()));
+        Map<Long, Company> companiesById = loadCompaniesById(departments.getContent());
+        return PageResponse.from(departments, department -> toResponse(department, companiesById.get(department.getCompanyId())));
     }
 
     @Override

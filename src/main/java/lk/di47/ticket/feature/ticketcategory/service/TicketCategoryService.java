@@ -1,13 +1,12 @@
 package lk.di47.ticket.feature.ticketcategory.service;
 
 import lk.di47.ticket.feature.ticketcategory.dto.*;
-
-import java.util.List;
+import lk.di47.ticket.response.PageResponse;
 
 public interface TicketCategoryService {
     TicketCategoryResponse create(CreateTicketCategoryRequest request);
 
-    List<TicketCategoryResponse> list();
+    PageResponse<TicketCategoryResponse> list(ListTicketCategoryRequest request);
 
     TicketCategoryResponse detail(TicketCategoryDetailRequest request);
 

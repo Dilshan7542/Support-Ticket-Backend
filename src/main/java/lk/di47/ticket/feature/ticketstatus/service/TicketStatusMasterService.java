@@ -1,13 +1,12 @@
 package lk.di47.ticket.feature.ticketstatus.service;
 
 import lk.di47.ticket.feature.ticketstatus.dto.*;
-
-import java.util.List;
+import lk.di47.ticket.response.PageResponse;
 
 public interface TicketStatusMasterService {
     TicketStatusMasterResponse create(CreateTicketStatusRequest request);
 
-    List<TicketStatusMasterResponse> list();
+    PageResponse<TicketStatusMasterResponse> list(ListTicketStatusRequest request);
 
     TicketStatusMasterResponse detail(TicketStatusDetailRequest request);
 
