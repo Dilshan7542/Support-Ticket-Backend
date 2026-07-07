@@ -27,7 +27,7 @@ public class StartupDataConfig {
                 user.setPassword(passwordEncoder.encode(password));
                 user.setFullName("System Admin");
                 user.setEmail("admin@aiticket.local");
-                user.setRole(UserRole.ADMIN);
+                user.setRole(UserRole.SUPER_ADMIN);
                 user.setStatus(Status.ACTIVE);
                 user.setCreatedAt(LocalDateTime.now());
                 userRepository.save(user);

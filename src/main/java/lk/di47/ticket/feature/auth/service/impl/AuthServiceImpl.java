@@ -105,7 +105,7 @@ public class AuthServiceImpl implements AuthService {
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPhone(request.phone());
-        user.setRole(lk.di47.ticket.util.enums.UserRole.CUSTOMER);
+        user.setRole(lk.di47.ticket.util.enums.UserRole.VIEWER);
         user.setStatus(Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
         return userRepository.save(user).getId();

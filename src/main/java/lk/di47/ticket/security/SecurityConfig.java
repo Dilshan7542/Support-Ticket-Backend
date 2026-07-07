@@ -1,6 +1,14 @@
 package lk.di47.ticket.security;
 
 import lk.di47.ticket.constant.SecurityPathConstant;
+import lk.di47.ticket.constant.endpoint.ActivityEndpoint;
+import lk.di47.ticket.constant.endpoint.AuthEndpoint;
+import lk.di47.ticket.constant.endpoint.CompanyEndpoint;
+import lk.di47.ticket.constant.endpoint.DashboardEndpoint;
+import lk.di47.ticket.constant.endpoint.DepartmentEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketCategoryEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketStatusEndpoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -28,6 +36,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private static final String VIEWER = "VIEWER";
+    private static final String EDITOR = "EDITOR";
+    private static final String SUPER_ADMIN = "SUPER_ADMIN";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -39,6 +50,40 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(SecurityPathConstant.PUBLIC_PATHS).permitAll()
+                        .requestMatchers(
+                                CompanyEndpoint.CREATE,
+                                CompanyEndpoint.UPDATE,
+                                DepartmentEndpoint.CREATE,
+                                DepartmentEndpoint.UPDATE,
+                                TicketCategoryEndpoint.CREATE,
+                                TicketCategoryEndpoint.UPDATE,
+                                TicketStatusEndpoint.CREATE,
+                                TicketStatusEndpoint.UPDATE
+                        ).hasRole(SUPER_ADMIN)
+                        .requestMatchers(
+                                TicketEndpoint.CREATE,
+                                TicketEndpoint.UPDATE_STATUS,
+                                TicketEndpoint.ADD_REPLY,
+                                TicketEndpoint.ASSIGN,
+                                TicketEndpoint.UPLOAD_ATTACHMENT
+                        ).hasAnyRole(EDITOR, SUPER_ADMIN)
+                        .requestMatchers(
+                                AuthEndpoint.LOGOUT,
+                                CompanyEndpoint.LIST,
+                                CompanyEndpoint.DETAIL,
+                                DepartmentEndpoint.LIST,
+                                DepartmentEndpoint.DETAIL,
+                                TicketCategoryEndpoint.LIST,
+                                TicketCategoryEndpoint.DETAIL,
+                                TicketStatusEndpoint.LIST,
+                                TicketStatusEndpoint.DETAIL,
+                                TicketEndpoint.LIST,
+                                TicketEndpoint.DETAIL,
+                                TicketEndpoint.DOWNLOAD_ATTACHMENT,
+                                DashboardEndpoint.SUMMARY,
+                                ActivityEndpoint.LIST,
+                                ActivityEndpoint.DETAIL
+                        ).hasAnyRole(VIEWER, EDITOR, SUPER_ADMIN)
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
