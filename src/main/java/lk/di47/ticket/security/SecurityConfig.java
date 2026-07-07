@@ -66,7 +66,7 @@ public class SecurityConfig {
                                 TicketEndpoint.CREATE,
                                 TicketEndpoint.ADD_REPLY,
                                 TicketEndpoint.UPLOAD_ATTACHMENT
-                        ).hasAnyRole(CUSTOMER, EDITOR, SUPER_ADMIN)
+                        ).hasAnyRole(CUSTOMER, VIEWER, EDITOR, SUPER_ADMIN)
                         .requestMatchers(
                                 TicketEndpoint.UPDATE_STATUS,
                                 TicketEndpoint.ASSIGN
