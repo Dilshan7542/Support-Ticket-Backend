@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "User is inactive");
         }
 
-        keyExchangeService.bindToUser(encryptionKeyId, user.getId());
+        keyExchangeService.validateSession(encryptionKeyId);
         String sessionId = UUID.randomUUID().toString();
         String accessToken = jwtService.generateAccessToken(user, sessionId);
         String refreshToken = jwtService.generateRefreshToken(user, sessionId);
@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Invalid refresh token");
         }
 
-        keyExchangeService.validateOwnership(encryptionKeyId, user.getId());
+        keyExchangeService.validateSession(encryptionKeyId);
         String newAccessToken = jwtService.generateAccessToken(user, tokenData.sessionId());
         String newRefreshToken = jwtService.generateRefreshToken(user, tokenData.sessionId());
         user.setRefreshTokenHash(HashUtil.sha256(newRefreshToken));
@@ -116,11 +116,10 @@ public class AuthServiceImpl implements AuthService {
     public void logout(Long userId, String encryptionKeyId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "Invalid user"));
-        keyExchangeService.validateOwnership(encryptionKeyId, userId);
+        keyExchangeService.validateSession(encryptionKeyId);
         user.setActiveSessionId(null);
         user.setRefreshTokenHash(null);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
-        keyExchangeService.invalidate(encryptionKeyId);
     }
 }

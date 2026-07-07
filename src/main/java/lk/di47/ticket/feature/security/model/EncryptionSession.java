@@ -14,7 +14,6 @@ public class EncryptionSession {
     private final Instant createdAt;
     private final Instant expiresAt;
     private final Map<String, Instant> usedNonces = new ConcurrentHashMap<>();
-    private volatile Long userId;
 
     public EncryptionSession(String keyId, SecretKey encryptionKey, Instant createdAt, Instant expiresAt) {
         this.keyId = keyId;
@@ -39,19 +38,8 @@ public class EncryptionSession {
         return expiresAt;
     }
 
-    public Long getUserId() {
-        return userId;
-    }
-
     public boolean isExpired(Instant now) {
         return !expiresAt.isAfter(now);
-    }
-
-    public synchronized void bindToUser(Long requestedUserId) {
-        if (userId != null && !userId.equals(requestedUserId)) {
-            throw new IllegalStateException("Encryption session is already bound to another user");
-        }
-        userId = requestedUserId;
     }
 
     public boolean registerNonce(String nonce, Instant now, Duration retention) {

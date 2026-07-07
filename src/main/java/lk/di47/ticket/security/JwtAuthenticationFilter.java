@@ -94,7 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Session is no longer active");
         }
 
-        keyExchangeService.validateOwnership(encryptionKeyId, user.getId());
+        keyExchangeService.validateSession(encryptionKeyId);
         return new ValidatedUserContext(user.getId(), user.getUsername(), user.getRole().name(), tokenData.sessionId(), encryptionKeyId);
     }
 }

@@ -144,20 +144,8 @@ public class KeyExchangeServiceImpl implements KeyExchangeService {
     }
 
     @Override
-    public void bindToUser(String keyId, Long userId) {
-        try {
-            getActiveSession(keyId).bindToUser(userId);
-        } catch (IllegalStateException exception) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Encryption session belongs to another user", exception);
-        }
-    }
-
-    @Override
-    public void validateOwnership(String keyId, Long userId) {
-        Long boundUserId = getActiveSession(keyId).getUserId();
-        if (boundUserId == null || !boundUserId.equals(userId)) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Invalid encryption session");
-        }
+    public void validateSession(String keyId) {
+        getActiveSession(keyId);
     }
 
     @Override
