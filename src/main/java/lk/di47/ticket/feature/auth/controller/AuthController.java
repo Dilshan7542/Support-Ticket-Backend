@@ -38,6 +38,20 @@ public class AuthController {
         return ApiResponse.success(MessageConstant.CREATED, authService.register(request));
     }
 
+    @PostMapping(AuthEndpoint.CREATE_USER)
+    public ApiResponse<Long> createUser(@Valid @RequestBody CreateUserRequest request,
+                                        HttpServletRequest servletRequest) {
+        log.debug("Create User -> {}", this.toJson(request));
+        Long currentUserId = (Long) servletRequest.getAttribute(SecurityConstant.CURRENT_USER_ID);
+        if (!request.userId().equals(currentUserId)) {
+            throw new BusinessException(
+                    lk.di47.ticket.exception.ErrorCode.UNAUTHORIZED,
+                    "Create user request user mismatch"
+            );
+        }
+        return ApiResponse.success(MessageConstant.CREATED, authService.createUser(request));
+    }
+
     @PostMapping(AuthEndpoint.REFRESH_TOKEN)
     public ApiResponse<RefreshTokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request,
                                                            @RequestHeader(SecurityConstant.KEY_ID_HEADER) String encryptionKeyId) {

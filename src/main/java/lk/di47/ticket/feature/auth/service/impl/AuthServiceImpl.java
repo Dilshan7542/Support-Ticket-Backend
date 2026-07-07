@@ -105,7 +105,26 @@ public class AuthServiceImpl implements AuthService {
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPhone(request.phone());
-        user.setRole(lk.di47.ticket.util.enums.UserRole.VIEWER);
+        user.setRole(lk.di47.ticket.util.enums.UserRole.CUSTOMER);
+        user.setStatus(Status.ACTIVE);
+        user.setCreatedAt(LocalDateTime.now());
+        return userRepository.save(user).getId();
+    }
+
+    @Override
+    @Transactional
+    public Long createUser(CreateUserRequest request) {
+        if (userRepository.existsByUsername(request.username())) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Username already exists");
+        }
+
+        User user = new User();
+        user.setUsername(request.username());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setFullName(request.fullName());
+        user.setEmail(request.email());
+        user.setPhone(request.phone());
+        user.setRole(request.role());
         user.setStatus(Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
         return userRepository.save(user).getId();

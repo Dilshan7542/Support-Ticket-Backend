@@ -7,7 +7,7 @@ import java.util.List;
 public interface TicketService {
     TicketResponse createTicket(CreateTicketRequest request);
 
-    List<TicketResponse> getTickets();
+    List<TicketResponse> getTickets(ListTicketRequest request);
 
     TicketResponse getTicket(TicketDetailRequest request);
 

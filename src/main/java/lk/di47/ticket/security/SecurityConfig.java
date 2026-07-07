@@ -36,6 +36,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private static final String CUSTOMER = "CUSTOMER";
     private static final String VIEWER = "VIEWER";
     private static final String EDITOR = "EDITOR";
     private static final String SUPER_ADMIN = "SUPER_ADMIN";
@@ -51,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(SecurityPathConstant.PUBLIC_PATHS).permitAll()
                         .requestMatchers(
+                                AuthEndpoint.CREATE_USER,
                                 CompanyEndpoint.CREATE,
                                 CompanyEndpoint.UPDATE,
                                 DepartmentEndpoint.CREATE,
@@ -62,13 +64,20 @@ public class SecurityConfig {
                         ).hasRole(SUPER_ADMIN)
                         .requestMatchers(
                                 TicketEndpoint.CREATE,
-                                TicketEndpoint.UPDATE_STATUS,
                                 TicketEndpoint.ADD_REPLY,
-                                TicketEndpoint.ASSIGN,
                                 TicketEndpoint.UPLOAD_ATTACHMENT
+                        ).hasAnyRole(CUSTOMER, EDITOR, SUPER_ADMIN)
+                        .requestMatchers(
+                                TicketEndpoint.UPDATE_STATUS,
+                                TicketEndpoint.ASSIGN
                         ).hasAnyRole(EDITOR, SUPER_ADMIN)
                         .requestMatchers(
                                 AuthEndpoint.LOGOUT,
+                                TicketEndpoint.LIST,
+                                TicketEndpoint.DETAIL,
+                                TicketEndpoint.DOWNLOAD_ATTACHMENT
+                        ).hasAnyRole(CUSTOMER, VIEWER, EDITOR, SUPER_ADMIN)
+                        .requestMatchers(
                                 CompanyEndpoint.LIST,
                                 CompanyEndpoint.DETAIL,
                                 DepartmentEndpoint.LIST,
@@ -77,9 +86,6 @@ public class SecurityConfig {
                                 TicketCategoryEndpoint.DETAIL,
                                 TicketStatusEndpoint.LIST,
                                 TicketStatusEndpoint.DETAIL,
-                                TicketEndpoint.LIST,
-                                TicketEndpoint.DETAIL,
-                                TicketEndpoint.DOWNLOAD_ATTACHMENT,
                                 DashboardEndpoint.SUMMARY,
                                 ActivityEndpoint.LIST,
                                 ActivityEndpoint.DETAIL

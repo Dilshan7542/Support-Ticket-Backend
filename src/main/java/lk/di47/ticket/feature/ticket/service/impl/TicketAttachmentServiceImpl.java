@@ -1,5 +1,6 @@
 package lk.di47.ticket.feature.ticket.service.impl;
 
+import lk.di47.ticket.entity.Ticket;
 import lk.di47.ticket.entity.TicketAttachment;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
@@ -11,6 +12,7 @@ import lk.di47.ticket.feature.ticket.service.TicketAttachmentService;
 import lk.di47.ticket.repository.TicketAttachmentRepository;
 import lk.di47.ticket.repository.TicketRepository;
 import lk.di47.ticket.repository.UserRepository;
+import lk.di47.ticket.util.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -64,12 +66,16 @@ public class TicketAttachmentServiceImpl implements TicketAttachmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public TicketAttachmentDownload downloadAttachment(Long attachmentId) {
+    public TicketAttachmentDownload downloadAttachment(Long attachmentId, Long requesterUserId) {
         if (attachmentId == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "attachmentId is required");
         }
+        if (requesterUserId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Missing authenticated user");
+        }
         TicketAttachment attachment = ticketAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new NotFoundException("Attachment not found"));
+        validateAttachmentDownloadAccess(requesterUserId, attachment);
 
         Path basePath = Path.of(attachmentProperties.getStoragePath()).toAbsolutePath().normalize();
         Path attachmentPath = Path.of(attachment.getStoragePath()).toAbsolutePath().normalize();
@@ -97,8 +103,10 @@ public class TicketAttachmentServiceImpl implements TicketAttachmentService {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User not found");
         }
-        if (ticketId != null && !ticketRepository.existsById(ticketId)) {
-            throw new NotFoundException("Ticket not found");
+        if (ticketId != null) {
+            Ticket ticket = ticketRepository.findById(ticketId)
+                    .orElseThrow(() -> new NotFoundException("Ticket not found"));
+            validateCustomerTicketAccess(userId, ticket);
         }
         if (file == null || file.isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "attachment is required");
@@ -106,6 +114,33 @@ public class TicketAttachmentServiceImpl implements TicketAttachmentService {
         if (file.getSize() > attachmentProperties.getMaxFileSizeBytes()) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Attachment exceeds max file size");
         }
+    }
+
+    private void validateAttachmentDownloadAccess(Long requesterUserId, TicketAttachment attachment) {
+        if (resolveUserRole(requesterUserId) != UserRole.CUSTOMER) {
+            return;
+        }
+        if (attachment.getTicketId() == null) {
+            if (!requesterUserId.equals(attachment.getUploadedByUserId())) {
+                throw new BusinessException(ErrorCode.FORBIDDEN, "You do not have access to this attachment");
+            }
+            return;
+        }
+        Ticket ticket = ticketRepository.findById(attachment.getTicketId())
+                .orElseThrow(() -> new NotFoundException("Ticket not found"));
+        validateCustomerTicketAccess(requesterUserId, ticket);
+    }
+
+    private void validateCustomerTicketAccess(Long userId, Ticket ticket) {
+        if (resolveUserRole(userId) == UserRole.CUSTOMER && !userId.equals(ticket.getCustomerId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "You do not have access to this ticket");
+        }
+    }
+
+    private UserRole resolveUserRole(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"))
+                .getRole();
     }
 
     private Path resolveTargetDirectory(Long ticketId, Long userId) {

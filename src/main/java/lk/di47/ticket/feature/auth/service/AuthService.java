@@ -9,5 +9,7 @@ public interface AuthService {
 
     Long register(RegisterRequest request);
 
+    Long createUser(CreateUserRequest request);
+
     void logout(Long userId, String encryptionKeyId);
 }

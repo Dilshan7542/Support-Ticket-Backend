@@ -21,9 +21,11 @@ import lk.di47.ticket.repository.TicketCategoryRepository;
 import lk.di47.ticket.repository.TicketReplyRepository;
 import lk.di47.ticket.repository.TicketRepository;
 import lk.di47.ticket.repository.TicketStatusHistoryRepository;
+import lk.di47.ticket.repository.UserRepository;
 import lk.di47.ticket.util.enums.NotificationType;
 import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
+import lk.di47.ticket.util.enums.UserRole;
 import lk.di47.ticket.util.generator.TicketNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -49,6 +51,7 @@ public class TicketServiceImpl implements TicketService {
     private final TicketCategoryRepository ticketCategoryRepository;
     private final TicketReplyRepository ticketReplyRepository;
     private final TicketStatusHistoryRepository ticketStatusHistoryRepository;
+    private final UserRepository userRepository;
     private final AiPredictionRepository aiPredictionRepository;
     private final AiPredictionService aiPredictionService;
     private final NotificationService notificationService;
@@ -84,8 +87,11 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public List<TicketResponse> getTickets() {
-        List<Ticket> tickets = ticketRepository.findAll();
+    public List<TicketResponse> getTickets(ListTicketRequest request) {
+        UserRole requesterRole = resolveUserRole(request.userId());
+        List<Ticket> tickets = requesterRole == UserRole.CUSTOMER
+                ? ticketRepository.findByCustomerId(request.userId())
+                : ticketRepository.findAll();
         Map<Long, List<TicketAttachmentSummary>> attachmentsByTicketId = loadAttachmentsByTicketId(tickets);
         Map<String, String> categoryNamesByCode = loadCategoryNamesByCode(tickets);
         return tickets.stream()
@@ -100,6 +106,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public TicketResponse getTicket(TicketDetailRequest request) {
         Ticket ticket = findTicket(request.ticketId());
+        validateCustomerTicketAccess(request.userId(), ticket);
         String categoryName = resolveCategoryName(ticket.getCategoryCode(), Map.of());
         return toResponse(ticket, categoryName, loadAttachments(ticket.getId()), loadReplies(ticket.getId()), loadTracking(ticket.getId()));
     }
@@ -146,6 +153,7 @@ public class TicketServiceImpl implements TicketService {
     @Transactional
     public Long addReply(AddTicketReplyRequest request) {
         Ticket ticket = findTicket(request.ticketId());
+        validateCustomerTicketAccess(request.userId(), ticket);
         TicketReply reply = new TicketReply();
         reply.setTicketId(request.ticketId());
         reply.setSenderUserId(request.userId());
@@ -233,6 +241,18 @@ public class TicketServiceImpl implements TicketService {
     private Ticket findTicket(Long ticketId) {
         return ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new NotFoundException("Ticket not found"));
+    }
+
+    private UserRole resolveUserRole(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"))
+                .getRole();
+    }
+
+    private void validateCustomerTicketAccess(Long userId, Ticket ticket) {
+        if (resolveUserRole(userId) == UserRole.CUSTOMER && !userId.equals(ticket.getCustomerId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "You do not have access to this ticket");
+        }
     }
 
     private void saveHistory(Long ticketId, TicketStatus previousStatus, TicketStatus newStatus, Long userId, String remark) {

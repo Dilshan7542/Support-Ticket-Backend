@@ -8,6 +8,7 @@ public final class AuthEndpoint {
 
     public static final String LOGIN = ApiConstant.API_V1 + "/auth/login";
     public static final String REGISTER = ApiConstant.API_V1 + "/auth/register";
+    public static final String CREATE_USER = ApiConstant.API_V1 + "/auth/create-user";
     public static final String REFRESH_TOKEN = ApiConstant.API_V1 + "/auth/refresh-token";
     public static final String LOGOUT = ApiConstant.API_V1 + "/auth/logout";
 }

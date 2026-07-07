@@ -7,5 +7,5 @@ import org.springframework.web.multipart.MultipartFile;
 public interface TicketAttachmentService {
     TicketAttachmentResponse uploadAttachment(Long userId, Long ticketId, MultipartFile file);
 
-    TicketAttachmentDownload downloadAttachment(Long attachmentId);
+    TicketAttachmentDownload downloadAttachment(Long attachmentId, Long requesterUserId);
 }

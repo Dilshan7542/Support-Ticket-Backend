@@ -23,4 +23,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findTop10ByOrderByCreatedAtDesc();
 
     List<Ticket> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
+
+    List<Ticket> findByCustomerId(Long customerId);
 }
