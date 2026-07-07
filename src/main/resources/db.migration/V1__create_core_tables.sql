@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS department (
     created_at DATETIME NOT NULL,
     updated_at DATETIME NULL,
     UNIQUE KEY uk_department_company_code (company_id, code),
-    INDEX idx_department_company_id (company_id)
+    CONSTRAINT fk_department_company FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS ticket_category (
@@ -47,8 +47,9 @@ CREATE TABLE IF NOT EXISTS ticket_category (
     status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NULL,
-    INDEX idx_ticket_category_company_id (company_id),
-    INDEX idx_ticket_category_department_id (department_id)
+    INDEX idx_ticket_category_department_id (department_id),
+    CONSTRAINT fk_ticket_category_company FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ticket_category_department FOREIGN KEY (department_id) REFERENCES department(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS ticket_status (
@@ -75,7 +76,15 @@ CREATE TABLE IF NOT EXISTS ticket (
     priority VARCHAR(20) NOT NULL,
     status VARCHAR(30) NOT NULL,
     created_at DATETIME NOT NULL,
-    updated_at DATETIME NULL
+    updated_at DATETIME NULL,
+    INDEX idx_ticket_customer_id (customer_id),
+    INDEX idx_ticket_department_id (department_id),
+    INDEX idx_ticket_category_id (category_id),
+    CONSTRAINT fk_ticket_customer FOREIGN KEY (customer_id) REFERENCES app_user(id),
+    CONSTRAINT fk_ticket_company FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ticket_department FOREIGN KEY (department_id) REFERENCES department(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ticket_category FOREIGN KEY (category_id) REFERENCES ticket_category(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ticket_assigned_staff FOREIGN KEY (assigned_staff_id) REFERENCES app_user(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS ticket_attachment (
@@ -87,7 +96,10 @@ CREATE TABLE IF NOT EXISTS ticket_attachment (
     content_type VARCHAR(120),
     file_size BIGINT NOT NULL,
     storage_path VARCHAR(500) NOT NULL,
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL,
+    INDEX idx_ticket_attachment_ticket_id (ticket_id),
+    CONSTRAINT fk_ticket_attachment_ticket FOREIGN KEY (ticket_id) REFERENCES ticket(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ticket_attachment_uploaded_by FOREIGN KEY (uploaded_by_user_id) REFERENCES app_user(id)
     );
 
 
@@ -96,7 +108,10 @@ CREATE TABLE IF NOT EXISTS ticket_reply (
     ticket_id BIGINT NOT NULL,
     sender_user_id BIGINT NOT NULL,
     message TEXT NOT NULL,
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL,
+    INDEX idx_ticket_reply_ticket_id (ticket_id),
+    CONSTRAINT fk_ticket_reply_ticket FOREIGN KEY (ticket_id) REFERENCES ticket(id),
+    CONSTRAINT fk_ticket_reply_sender FOREIGN KEY (sender_user_id) REFERENCES app_user(id)
 );
 
 CREATE TABLE IF NOT EXISTS ticket_status_history (
@@ -106,7 +121,10 @@ CREATE TABLE IF NOT EXISTS ticket_status_history (
     new_status VARCHAR(30) NOT NULL,
     changed_by_user_id BIGINT,
     remark VARCHAR(255),
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL,
+    INDEX idx_ticket_status_history_ticket_id (ticket_id),
+    CONSTRAINT fk_ticket_status_history_ticket FOREIGN KEY (ticket_id) REFERENCES ticket(id),
+    CONSTRAINT fk_ticket_status_history_changed_by FOREIGN KEY (changed_by_user_id) REFERENCES app_user(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS ai_prediction (
@@ -117,7 +135,10 @@ CREATE TABLE IF NOT EXISTS ai_prediction (
     suggested_department_id BIGINT,
     confidence_score DECIMAL(5,2),
     raw_response TEXT,
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL,
+    INDEX idx_ai_prediction_ticket_id (ticket_id),
+    CONSTRAINT fk_ai_prediction_ticket FOREIGN KEY (ticket_id) REFERENCES ticket(id),
+    CONSTRAINT fk_ai_prediction_suggested_department FOREIGN KEY (suggested_department_id) REFERENCES department(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS activity_log (
@@ -144,7 +165,8 @@ CREATE TABLE IF NOT EXISTS notification (
     message VARCHAR(500) NOT NULL,
     notification_type VARCHAR(50) NOT NULL,
     read_status BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL,
+    CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES app_user(id)
 );
 
 CREATE TABLE IF NOT EXISTS mail_log (
