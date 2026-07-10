@@ -2,6 +2,8 @@ package lk.di47.ticket.repository;
 
 import lk.di47.ticket.entity.Department;
 import lk.di47.ticket.util.enums.Status;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
@@ -25,6 +27,8 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     boolean existsByCodeAndIdNot(String code, Long id);
 
     long countByStatus(Status status);
+
+    Page<Department> findByCompanyId(Long companyId, Pageable pageable);
 
     List<Department> findByIdIn(Collection<Long> ids);
 }

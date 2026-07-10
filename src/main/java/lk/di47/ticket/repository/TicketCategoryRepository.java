@@ -2,6 +2,8 @@ package lk.di47.ticket.repository;
 
 import lk.di47.ticket.entity.TicketCategory;
 import lk.di47.ticket.util.enums.Status;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Collection;
@@ -14,6 +16,12 @@ public interface TicketCategoryRepository extends JpaRepository<TicketCategory, 
     boolean existsByCodeAndIdNot(String code, Long id);
 
     Optional<TicketCategory> findByCodeAndStatus(String code, Status status);
+
+    Page<TicketCategory> findByCompanyId(Long companyId, Pageable pageable);
+
+    Page<TicketCategory> findByDepartmentId(Long departmentId, Pageable pageable);
+
+    Page<TicketCategory> findByCompanyIdAndDepartmentId(Long companyId, Long departmentId, Pageable pageable);
 
     List<TicketCategory> findByCodeIn(Collection<String> codes);
 

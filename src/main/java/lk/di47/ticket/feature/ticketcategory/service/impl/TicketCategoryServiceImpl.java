@@ -14,6 +14,7 @@ import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.Status;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +47,9 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
 
     @Override
     public PageResponse<TicketCategoryResponse> list(ListTicketCategoryRequest request) {
-        return PageResponse.from(
-                ticketCategoryRepository.findAll(PaginationUtil.toPageable(request.page(), request.size())),
-                this::toResponse
-        );
+        validateParents(request.companyId(), request.departmentId());
+        Page<TicketCategory> categories = findCategories(request);
+        return PageResponse.from(categories, this::toResponse);
     }
 
     @Override
@@ -110,6 +110,20 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
                 category.getDescription(),
                 category.getStatus()
         );
+    }
+
+    private Page<TicketCategory> findCategories(ListTicketCategoryRequest request) {
+        var pageable = PaginationUtil.toPageable(request.page(), request.size());
+        if (request.companyId() != null && request.departmentId() != null) {
+            return ticketCategoryRepository.findByCompanyIdAndDepartmentId(request.companyId(), request.departmentId(), pageable);
+        }
+        if (request.departmentId() != null) {
+            return ticketCategoryRepository.findByDepartmentId(request.departmentId(), pageable);
+        }
+        if (request.companyId() != null) {
+            return ticketCategoryRepository.findByCompanyId(request.companyId(), pageable);
+        }
+        return ticketCategoryRepository.findAll(pageable);
     }
 
     private record ParentMapping(Long companyId, Long departmentId) {

@@ -56,7 +56,10 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public PageResponse<DepartmentResponse> list(ListDepartmentRequest request) {
-        Page<Department> departments = departmentRepository.findAll(PaginationUtil.toPageable(request.page(), request.size()));
+        validateCompany(request.companyId());
+        Page<Department> departments = request.companyId() == null
+                ? departmentRepository.findAll(PaginationUtil.toPageable(request.page(), request.size()))
+                : departmentRepository.findByCompanyId(request.companyId(), PaginationUtil.toPageable(request.page(), request.size()));
         Map<Long, Company> companiesById = loadCompaniesById(departments.getContent());
         return PageResponse.from(departments, department -> toResponse(department, companiesById.get(department.getCompanyId())));
     }
