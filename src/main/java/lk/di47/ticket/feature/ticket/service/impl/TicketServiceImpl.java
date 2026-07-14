@@ -8,6 +8,7 @@ import lk.di47.ticket.entity.TicketAttachment;
 import lk.di47.ticket.entity.TicketCategory;
 import lk.di47.ticket.entity.TicketReply;
 import lk.di47.ticket.entity.TicketStatusHistory;
+import lk.di47.ticket.entity.User;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.exception.NotFoundException;
@@ -38,6 +39,7 @@ import lk.di47.ticket.util.generator.TicketNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
@@ -48,6 +50,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -100,14 +103,104 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public PageResponse<TicketResponse> getTickets(ListTicketRequest request) {
         UserRole requesterRole = resolveUserRole(request.userId());
-        Page<Ticket> tickets = requesterRole == UserRole.CUSTOMER
-                ? ticketRepository.findByCustomerId(request.userId(), PaginationUtil.toPageable(request.page(), request.size()))
-                : ticketRepository.findAll(PaginationUtil.toPageable(request.page(), request.size()));
+        Specification<Ticket> specification = buildTicketListSpecification(request, requesterRole);
+        Page<Ticket> tickets = ticketRepository.findAll(
+                specification,
+                PaginationUtil.toPageable(request.page(), request.size())
+        );
         Map<Long, List<TicketAttachmentSummary>> attachmentsByTicketId = loadAttachmentsByTicketId(tickets.getContent());
         return PageResponse.from(
                 tickets,
                 ticket -> toResponse(ticket, attachmentsByTicketId.getOrDefault(ticket.getId(), List.of()))
         );
+    }
+
+    private Specification<Ticket> buildTicketListSpecification(ListTicketRequest request, UserRole requesterRole) {
+        Specification<Ticket> specification = Specification.unrestricted();
+        if (requesterRole == UserRole.CUSTOMER) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("customerId"), request.userId()));
+        } else if (request.customerId() != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("customerId"), request.customerId()));
+        }
+
+        specification = specification
+                .and(equalIfPresent("id", request.ticketId()))
+                .and(likeIfPresent("ticketNo", request.ticketNo()))
+                .and(equalIfPresent("companyId", request.companyId()))
+                .and(equalIfPresent("departmentId", request.departmentId()))
+                .and(equalIfPresent("assignedStaffId", request.assignedStaffId()))
+                .and(equalIfPresent("categoryId", request.categoryId()))
+                .and(likeIfPresent("categoryCode", request.categoryCode()))
+                .and(likeIfPresent("subject", request.subject()))
+                .and(equalIfPresent("priority", request.priority()))
+                .and(equalIfPresent("status", request.status()));
+
+        specification = specification
+                .and(inIfTextPresent("customerId", request.customerName(), this::findUserIdsByName))
+                .and(inIfTextPresent("companyId", request.companyName(), this::findCompanyIdsByName))
+                .and(inIfTextPresent("departmentId", request.departmentName(), this::findDepartmentIdsByName))
+                .and(inIfTextPresent("assignedStaffId", request.assignedStaffName(), this::findUserIdsByName))
+                .and(inIfTextPresent("categoryId", request.categoryName(), this::findCategoryIdsByName));
+        return specification;
+    }
+
+    private <T> Specification<Ticket> equalIfPresent(String field, T value) {
+        if (value == null) {
+            return Specification.unrestricted();
+        }
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get(field), value);
+    }
+
+    private Specification<Ticket> likeIfPresent(String field, String value) {
+        if (isBlank(value)) {
+            return Specification.unrestricted();
+        }
+        String pattern = "%" + value.trim().toLowerCase(Locale.ROOT) + "%";
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(criteriaBuilder.lower(root.get(field)), pattern);
+    }
+
+    private Specification<Ticket> inIfTextPresent(String field,
+                                                  String value,
+                                                  java.util.function.Function<String, List<Long>> idResolver) {
+        if (isBlank(value)) {
+            return Specification.unrestricted();
+        }
+        List<Long> ids = idResolver.apply(value.trim());
+        if (ids.isEmpty()) {
+            return (root, query, criteriaBuilder) -> criteriaBuilder.disjunction();
+        }
+        return (root, query, criteriaBuilder) -> root.get(field).in(ids);
+    }
+
+    private List<Long> findUserIdsByName(String name) {
+        return userRepository.findByFullNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(name, name).stream()
+                .map(User::getId)
+                .toList();
+    }
+
+    private List<Long> findCompanyIdsByName(String name) {
+        return companyRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(Company::getId)
+                .toList();
+    }
+
+    private List<Long> findDepartmentIdsByName(String name) {
+        return departmentRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(Department::getId)
+                .toList();
+    }
+
+    private List<Long> findCategoryIdsByName(String name) {
+        return ticketCategoryRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(TicketCategory::getId)
+                .toList();
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     @Override

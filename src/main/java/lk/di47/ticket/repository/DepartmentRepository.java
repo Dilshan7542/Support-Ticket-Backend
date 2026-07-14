@@ -31,4 +31,6 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     Page<Department> findByCompanyId(Long companyId, Pageable pageable);
 
     List<Department> findByIdIn(Collection<Long> ids);
+
+    List<Department> findByNameContainingIgnoreCase(String name);
 }
