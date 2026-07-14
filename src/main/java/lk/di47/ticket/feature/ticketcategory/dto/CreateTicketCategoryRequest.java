@@ -8,10 +8,6 @@ public record CreateTicketCategoryRequest(
         @NotNull(message = "userId is required")
         Long userId,
 
-        Long companyId,
-
-        Long departmentId,
-
         @NotBlank(message = "Category name is required")
         @Size(max = 100)
         String name,

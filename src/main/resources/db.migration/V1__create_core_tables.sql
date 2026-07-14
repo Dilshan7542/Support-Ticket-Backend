@@ -26,30 +26,41 @@ CREATE TABLE IF NOT EXISTS company (
 
 CREATE TABLE IF NOT EXISTS department (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
     code VARCHAR(64) NOT NULL,
-    company_id BIGINT NULL,
+    company_id BIGINT NOT NULL,
     description VARCHAR(255),
     status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NULL,
+    UNIQUE KEY uk_department_company_name (company_id, name),
     UNIQUE KEY uk_department_company_code (company_id, code),
-    CONSTRAINT fk_department_company FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE SET NULL
+    CONSTRAINT fk_department_company FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 CREATE TABLE IF NOT EXISTS ticket_category (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id BIGINT NULL,
-    department_id BIGINT NULL,
     name VARCHAR(100) NOT NULL,
     code VARCHAR(64) NOT NULL UNIQUE,
     description VARCHAR(255),
     status VARCHAR(20) NOT NULL,
     created_at DATETIME NOT NULL,
+    updated_at DATETIME NULL
+);
+
+CREATE TABLE IF NOT EXISTS ticket_category_department_mapping (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id BIGINT NOT NULL,
+    category_id BIGINT NOT NULL,
+    department_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    created_at DATETIME NOT NULL,
     updated_at DATETIME NULL,
-    INDEX idx_ticket_category_department_id (department_id),
-    CONSTRAINT fk_ticket_category_company FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE SET NULL,
-    CONSTRAINT fk_ticket_category_department FOREIGN KEY (department_id) REFERENCES department(id) ON DELETE SET NULL
+    UNIQUE KEY uk_mapping_company_category (company_id, category_id),
+    INDEX idx_mapping_department_id (department_id),
+    CONSTRAINT fk_mapping_company FOREIGN KEY (company_id) REFERENCES company(id),
+    CONSTRAINT fk_mapping_category FOREIGN KEY (category_id) REFERENCES ticket_category(id),
+    CONSTRAINT fk_mapping_department FOREIGN KEY (department_id) REFERENCES department(id)
 );
 
 CREATE TABLE IF NOT EXISTS ticket_status (

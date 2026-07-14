@@ -8,6 +8,9 @@ public record CreateTicketRequest(
         @NotNull(message = "userId is required")
         Long userId,
 
+        @NotNull(message = "companyId is required")
+        Long companyId,
+
         @NotBlank(message = "Subject is required")
         @Size(max = 150)
         String subject,

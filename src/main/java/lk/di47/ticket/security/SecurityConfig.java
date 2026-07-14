@@ -7,6 +7,7 @@ import lk.di47.ticket.constant.endpoint.CompanyEndpoint;
 import lk.di47.ticket.constant.endpoint.DashboardEndpoint;
 import lk.di47.ticket.constant.endpoint.DepartmentEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketCategoryEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketCategoryMappingEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketStatusEndpoint;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,8 @@ public class SecurityConfig {
                                 DepartmentEndpoint.UPDATE,
                                 TicketCategoryEndpoint.CREATE,
                                 TicketCategoryEndpoint.UPDATE,
+                                TicketCategoryMappingEndpoint.CREATE,
+                                TicketCategoryMappingEndpoint.UPDATE,
                                 TicketStatusEndpoint.CREATE,
                                 TicketStatusEndpoint.UPDATE
                         ).hasRole(SUPER_ADMIN)
@@ -84,6 +87,8 @@ public class SecurityConfig {
                                 DepartmentEndpoint.DETAIL,
                                 TicketCategoryEndpoint.LIST,
                                 TicketCategoryEndpoint.DETAIL,
+                                TicketCategoryMappingEndpoint.LIST,
+                                TicketCategoryMappingEndpoint.DETAIL,
                                 TicketStatusEndpoint.LIST,
                                 TicketStatusEndpoint.DETAIL,
                                 DashboardEndpoint.SUMMARY,

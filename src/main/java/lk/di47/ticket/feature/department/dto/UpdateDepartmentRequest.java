@@ -20,6 +20,7 @@ public record UpdateDepartmentRequest(
         @Size(max = 30)
         String code,
 
+        @NotNull(message = "companyId is required")
         Long companyId,
 
         @Size(max = 255)

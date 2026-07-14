@@ -116,8 +116,13 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     private void validateCompany(Long companyId) {
-        if (companyId != null && !companyRepository.existsById(companyId)) {
-            throw new NotFoundException("Company not found");
+        if (companyId == null) {
+            return;
+        }
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new NotFoundException("Company not found"));
+        if (company.getStatus() != Status.ACTIVE) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Company is not active");
         }
     }
 

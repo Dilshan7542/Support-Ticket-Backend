@@ -24,18 +24,18 @@ public class JavaAiPredictionClient implements AiPredictionGateway {
 
     private String resolveCategory(String description) {
         if (containsAny(description, "login", "password", "otp", "token", "account", "access")) {
-            return "AUTH";
+            return "LOGIN_ISSUE";
         }
         if (containsAny(description, "payment", "invoice", "refund", "billing", "card")) {
-            return "BILLING";
+            return "PAYMENT_ISSUE";
         }
         if (containsAny(description, "bug", "error", "exception", "crash", "failed", "not working")) {
-            return "TECHNICAL";
+            return "TECHNICAL_ISSUE";
         }
         if (containsAny(description, "slow", "timeout", "performance", "delay")) {
-            return "PERFORMANCE";
+            return "PERFORMANCE_ISSUE";
         }
-        return "GENERAL";
+        return "GENERAL_INQUIRY";
     }
 
     private String resolvePriority(String description) {

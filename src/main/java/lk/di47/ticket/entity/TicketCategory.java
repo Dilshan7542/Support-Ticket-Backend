@@ -18,9 +18,6 @@ public class TicketCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long companyId;
-    private Long departmentId;
-
     @Column(nullable = false, length = 100)
     private String name;
 

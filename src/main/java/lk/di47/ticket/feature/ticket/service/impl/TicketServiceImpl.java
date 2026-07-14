@@ -21,6 +21,7 @@ import lk.di47.ticket.repository.AiPredictionRepository;
 import lk.di47.ticket.repository.CompanyRepository;
 import lk.di47.ticket.repository.DepartmentRepository;
 import lk.di47.ticket.repository.TicketAttachmentRepository;
+import lk.di47.ticket.repository.TicketCategoryDepartmentMappingRepository;
 import lk.di47.ticket.repository.TicketCategoryRepository;
 import lk.di47.ticket.repository.TicketReplyRepository;
 import lk.di47.ticket.repository.TicketRepository;
@@ -29,6 +30,7 @@ import lk.di47.ticket.repository.UserRepository;
 import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.NotificationType;
+import lk.di47.ticket.util.enums.Status;
 import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import lk.di47.ticket.util.enums.UserRole;
@@ -62,6 +64,7 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
     private final AiPredictionRepository aiPredictionRepository;
     private final AiPredictionService aiPredictionService;
+    private final TicketCategoryDepartmentMappingRepository mappingRepository;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
@@ -71,15 +74,15 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = new Ticket();
         ticket.setTicketNo(TicketNumberGenerator.generate());
         ticket.setCustomerId(request.userId());
+        ticket.setCompanyId(validateActiveCompany(request.companyId()).getId());
         ticket.setSubject(request.subject());
         ticket.setDescription(request.description());
-        applyCategoryMapping(ticket, request.categoryCode());
         ticket.setPriority(TicketPriority.MEDIUM);
         ticket.setStatus(TicketStatus.NEW);
         ticket.setCreatedAt(LocalDateTime.now());
 
         AiPredictionResponse prediction = predictTicketSafely(request);
-        applyPrediction(ticket, prediction);
+        applyPrediction(ticket, request.categoryCode(), prediction);
 
         Ticket savedTicket = ticketRepository.save(ticket);
         saveAiPrediction(savedTicket.getId(), prediction);
@@ -183,45 +186,49 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
-    private void applyPrediction(Ticket ticket, AiPredictionResponse prediction) {
-        if (prediction == null) {
-            return;
+    private void applyPrediction(Ticket ticket, String requestedCategoryCode, AiPredictionResponse prediction) {
+        String categoryCode = requestedCategoryCode;
+        if ((categoryCode == null || categoryCode.isBlank()) && prediction != null) {
+            categoryCode = prediction.category();
         }
-        if (prediction.suggestedDepartmentId() != null && ticket.getDepartmentId() == null) {
-            applyDepartmentMapping(ticket, prediction.suggestedDepartmentId());
+        applyCategoryMapping(ticket, categoryCode);
+        if (prediction != null) {
+            resolvePriority(prediction.priority()).ifPresent(ticket::setPriority);
         }
-        resolvePriority(prediction.priority()).ifPresent(ticket::setPriority);
     }
 
     private void applyCategoryMapping(Ticket ticket, String categoryCode) {
         if (categoryCode == null || categoryCode.isBlank()) {
             return;
         }
-        TicketCategory category = ticketCategoryRepository.findByCodeAndStatus(categoryCode, lk.di47.ticket.util.enums.Status.ACTIVE)
+        TicketCategory category = ticketCategoryRepository.findByCodeAndStatus(categoryCode, Status.ACTIVE)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category not found"));
         ticket.setCategoryId(category.getId());
         ticket.setCategoryCode(category.getCode());
-        ticket.setDepartmentId(category.getDepartmentId());
-        ticket.setCompanyId(resolveCompanyId(category.getCompanyId(), category.getDepartmentId()));
+        mappingRepository.findByCompanyIdAndCategoryIdAndStatus(ticket.getCompanyId(), category.getId(), Status.ACTIVE)
+                .ifPresent(mapping -> applyDepartmentMapping(ticket, mapping.getDepartmentId()));
     }
 
     private void applyDepartmentMapping(Ticket ticket, Long departmentId) {
         Department department = departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new NotFoundException("Department not found"));
+        if (department.getStatus() != Status.ACTIVE) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department is not active");
+        }
+        if (ticket.getCompanyId() != null && !ticket.getCompanyId().equals(department.getCompanyId())) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department does not belong to ticket company");
+        }
         ticket.setDepartmentId(department.getId());
         ticket.setCompanyId(department.getCompanyId());
     }
 
-    private Long resolveCompanyId(Long categoryCompanyId, Long departmentId) {
-        if (categoryCompanyId != null) {
-            return categoryCompanyId;
+    private Company validateActiveCompany(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new NotFoundException("Company not found"));
+        if (company.getStatus() != Status.ACTIVE) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Company is not active");
         }
-        if (departmentId == null) {
-            return null;
-        }
-        return departmentRepository.findById(departmentId)
-                .map(Department::getCompanyId)
-                .orElse(null);
+        return company;
     }
 
     private java.util.Optional<TicketPriority> resolvePriority(String priority) {
@@ -330,9 +337,7 @@ public class TicketServiceImpl implements TicketService {
     private TicketRelations resolveRelations(Ticket ticket) {
         TicketCategory category = resolveCategory(ticket);
         Department department = resolveDepartment(ticket, category);
-        Long companyId = ticket.getCompanyId() != null
-                ? ticket.getCompanyId()
-                : category == null ? null : category.getCompanyId();
+        Long companyId = ticket.getCompanyId();
         if (companyId == null && department != null) {
             companyId = department.getCompanyId();
         }
@@ -355,14 +360,12 @@ public class TicketServiceImpl implements TicketService {
         if (ticket.getCategoryCode() == null || ticket.getCategoryCode().isBlank()) {
             return null;
         }
-        return ticketCategoryRepository.findByCodeAndStatus(ticket.getCategoryCode(), lk.di47.ticket.util.enums.Status.ACTIVE)
+        return ticketCategoryRepository.findByCodeAndStatus(ticket.getCategoryCode(), Status.ACTIVE)
                 .orElse(null);
     }
 
     private Department resolveDepartment(Ticket ticket, TicketCategory category) {
-        Long departmentId = ticket.getDepartmentId() != null
-                ? ticket.getDepartmentId()
-                : category == null ? null : category.getDepartmentId();
+        Long departmentId = ticket.getDepartmentId();
         if (departmentId == null) {
             return null;
         }

@@ -12,10 +12,6 @@ public record UpdateTicketCategoryRequest(
         @NotNull(message = "categoryId is required")
         Long categoryId,
 
-        Long companyId,
-
-        Long departmentId,
-
         @NotBlank(message = "Category name is required")
         @Size(max = 100)
         String name,
