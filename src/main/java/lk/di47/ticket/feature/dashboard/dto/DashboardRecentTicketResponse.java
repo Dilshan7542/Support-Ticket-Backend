@@ -23,5 +23,6 @@ public class DashboardRecentTicketResponse {
     private Long departmentId;
     private String departmentName;
     private Long assignedStaffId;
+    private String assignedStaffName;
     private LocalDateTime createdAt;
 }

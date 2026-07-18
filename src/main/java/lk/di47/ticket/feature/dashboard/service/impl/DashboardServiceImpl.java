@@ -4,6 +4,7 @@ import lk.di47.ticket.entity.ActivityLog;
 import lk.di47.ticket.entity.Department;
 import lk.di47.ticket.entity.Ticket;
 import lk.di47.ticket.entity.TicketCategory;
+import lk.di47.ticket.entity.User;
 import lk.di47.ticket.feature.dashboard.dto.*;
 import lk.di47.ticket.feature.dashboard.service.DashboardService;
 import lk.di47.ticket.repository.*;
@@ -47,6 +48,8 @@ public class DashboardServiceImpl implements DashboardService {
                 .collect(Collectors.toMap(Department::getId, Department::getName));
         Map<String, String> categoryNames = ticketCategoryRepository.findAll().stream()
                 .collect(Collectors.toMap(TicketCategory::getCode, TicketCategory::getName));
+        Map<Long, String> userNames = userRepository.findAll().stream()
+                .collect(Collectors.toMap(User::getId, User::getFullName));
 
         return DashboardSummaryResponse.builder()
                 .dateFrom(dateFrom)
@@ -57,7 +60,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .ticketsByCategory(buildCategoryMetrics(periodTickets, categoryNames))
                 .ticketsByDepartment(buildDepartmentMetrics(periodTickets, departmentNames))
                 .dailyTicketTrend(buildDailyTrend(dateFrom, dateTo, periodTickets))
-                .recentTickets(buildRecentTickets(recentTickets, departmentNames, categoryNames))
+                .recentTickets(buildRecentTickets(recentTickets, departmentNames, categoryNames, userNames))
                 .recentActivities(buildRecentActivities())
                 .build();
     }
@@ -138,7 +141,8 @@ public class DashboardServiceImpl implements DashboardService {
 
     private List<DashboardRecentTicketResponse> buildRecentTickets(List<Ticket> tickets,
                                                                    Map<Long, String> departmentNames,
-                                                                   Map<String, String> categoryNames) {
+                                                                   Map<String, String> categoryNames,
+                                                                   Map<Long, String> userNames) {
         return tickets.stream()
                 .map(ticket -> DashboardRecentTicketResponse.builder()
                         .ticketId(ticket.getId())
@@ -151,6 +155,7 @@ public class DashboardServiceImpl implements DashboardService {
                         .departmentId(ticket.getDepartmentId())
                         .departmentName(resolveDepartmentName(ticket.getDepartmentId(), departmentNames))
                         .assignedStaffId(ticket.getAssignedStaffId())
+                        .assignedStaffName(resolveUserName(ticket.getAssignedStaffId(), userNames))
                         .createdAt(ticket.getCreatedAt())
                         .build())
                 .toList();
@@ -187,6 +192,13 @@ public class DashboardServiceImpl implements DashboardService {
             return "UNCATEGORIZED";
         }
         return categoryNames.getOrDefault(categoryCode, categoryCode);
+    }
+
+    private String resolveUserName(Long userId, Map<Long, String> userNames) {
+        if (userId == null) {
+            return null;
+        }
+        return userNames.get(userId);
     }
 
     private List<DashboardMetricResponse> toSortedMetricList(Map<String, Long> metrics) {

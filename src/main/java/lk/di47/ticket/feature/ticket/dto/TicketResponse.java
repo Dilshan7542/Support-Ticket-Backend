@@ -15,6 +15,7 @@ public record TicketResponse(
         String departmentName,
         Long categoryId,
         Long assignedStaffId,
+        String assignedStaffName,
         String subject,
         String description,
         String categoryCode,

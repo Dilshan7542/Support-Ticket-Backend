@@ -20,6 +20,7 @@ public final class TicketMapper {
                 null,
                 ticket.getCategoryId(),
                 ticket.getAssignedStaffId(),
+                null,
                 ticket.getSubject(),
                 ticket.getDescription(),
                 ticket.getCategoryCode(),

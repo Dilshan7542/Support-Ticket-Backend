@@ -75,12 +75,17 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @Transactional
     public TicketResponse createTicket(CreateTicketRequest request) {
+        String subject = requireText(request.effectiveSubject(), "Subject is required");
+        String description = requireText(request.effectiveDescription(), "Description is required");
+
         Ticket ticket = new Ticket();
         ticket.setTicketNo(TicketNumberGenerator.generate());
         ticket.setCustomerId(request.userId());
-        ticket.setCompanyId(validateActiveCompany(request.companyId()).getId());
-        ticket.setSubject(request.subject());
-        ticket.setDescription(request.description());
+        if (request.companyId() != null) {
+            ticket.setCompanyId(validateActiveCompany(request.companyId()).getId());
+        }
+        ticket.setSubject(subject);
+        ticket.setDescription(description);
         ticket.setPriority("MEDIUM");
         ticket.setStatus(TicketStatus.NEW);
         ticket.setCreatedAt(LocalDateTime.now());
@@ -271,7 +276,7 @@ public class TicketServiceImpl implements TicketService {
 
     private AiPredictionResponse predictTicketSafely(CreateTicketRequest request) {
         try {
-            return aiPredictionService.predictTicket(new AiPredictionRequest(request.userId(), request.description()));
+            return aiPredictionService.predictTicket(new AiPredictionRequest(request.userId(), request.effectiveDescription()));
         } catch (Exception exception) {
             log.error("AI prediction service failed. Ticket will be created with default priority. Reason: {}",
                     exception.getMessage(),
@@ -299,6 +304,9 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category not found"));
         ticket.setCategoryId(category.getId());
         ticket.setCategoryCode(category.getCode());
+        if (ticket.getCompanyId() == null) {
+            return;
+        }
         mappingRepository.findByCompanyIdAndCategoryIdAndStatus(ticket.getCompanyId(), category.getId(), Status.ACTIVE)
                 .ifPresent(mapping -> applyDepartmentMapping(ticket, mapping.getDepartmentId()));
     }
@@ -415,6 +423,7 @@ public class TicketServiceImpl implements TicketService {
                 relations.departmentName(),
                 relations.categoryId(),
                 ticket.getAssignedStaffId(),
+                resolveUserName(ticket.getAssignedStaffId()),
                 ticket.getSubject(),
                 ticket.getDescription(),
                 relations.categoryCode(),
@@ -456,6 +465,22 @@ public class TicketServiceImpl implements TicketService {
         }
         return ticketCategoryRepository.findByCodeAndStatus(ticket.getCategoryCode(), Status.ACTIVE)
                 .orElse(null);
+    }
+
+    private String resolveUserName(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        return userRepository.findById(userId)
+                .map(User::getFullName)
+                .orElse(null);
+    }
+
+    private String requireText(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, message);
+        }
+        return value.trim();
     }
 
     private Department resolveDepartment(Ticket ticket, TicketCategory category) {
