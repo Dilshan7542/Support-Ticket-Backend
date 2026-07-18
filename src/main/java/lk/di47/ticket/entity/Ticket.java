@@ -1,7 +1,6 @@
 package lk.di47.ticket.entity;
 
 import jakarta.persistence.*;
-import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,9 +39,8 @@ public class Ticket {
     @Column(name = "category_code", length = 64)
     private String categoryCode;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TicketPriority priority;
+    private String priority;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

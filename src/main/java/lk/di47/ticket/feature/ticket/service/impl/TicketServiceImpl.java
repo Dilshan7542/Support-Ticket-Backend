@@ -24,6 +24,7 @@ import lk.di47.ticket.repository.DepartmentRepository;
 import lk.di47.ticket.repository.TicketAttachmentRepository;
 import lk.di47.ticket.repository.TicketCategoryDepartmentMappingRepository;
 import lk.di47.ticket.repository.TicketCategoryRepository;
+import lk.di47.ticket.repository.TicketPriorityMasterRepository;
 import lk.di47.ticket.repository.TicketReplyRepository;
 import lk.di47.ticket.repository.TicketRepository;
 import lk.di47.ticket.repository.TicketStatusHistoryRepository;
@@ -32,7 +33,6 @@ import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.NotificationType;
 import lk.di47.ticket.util.enums.Status;
-import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import lk.di47.ticket.util.enums.UserRole;
 import lk.di47.ticket.util.generator.TicketNumberGenerator;
@@ -70,6 +70,7 @@ public class TicketServiceImpl implements TicketService {
     private final TicketCategoryDepartmentMappingRepository mappingRepository;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
+    private final TicketPriorityMasterRepository ticketPriorityMasterRepository;
 
     @Override
     @Transactional
@@ -80,7 +81,7 @@ public class TicketServiceImpl implements TicketService {
         ticket.setCompanyId(validateActiveCompany(request.companyId()).getId());
         ticket.setSubject(request.subject());
         ticket.setDescription(request.description());
-        ticket.setPriority(TicketPriority.MEDIUM);
+        ticket.setPriority("MEDIUM");
         ticket.setStatus(TicketStatus.NEW);
         ticket.setCreatedAt(LocalDateTime.now());
 
@@ -324,16 +325,16 @@ public class TicketServiceImpl implements TicketService {
         return company;
     }
 
-    private java.util.Optional<TicketPriority> resolvePriority(String priority) {
+    private java.util.Optional<String> resolvePriority(String priority) {
         if (priority == null || priority.isBlank()) {
             return java.util.Optional.empty();
         }
-        try {
-            return java.util.Optional.of(TicketPriority.valueOf(priority.trim().toUpperCase()));
-        } catch (IllegalArgumentException exception) {
-            log.error("Invalid AI priority received: {}", priority, exception);
-            return java.util.Optional.empty();
+        String normalizedPriority = priority.trim().toUpperCase(Locale.ROOT);
+        if (ticketPriorityMasterRepository.findByCodeAndStatus(normalizedPriority, Status.ACTIVE).isPresent()) {
+            return java.util.Optional.of(normalizedPriority);
         }
+        log.error("Invalid AI priority received: {}", priority);
+        return java.util.Optional.empty();
     }
 
     private void saveAiPrediction(Long ticketId, AiPredictionResponse prediction) {

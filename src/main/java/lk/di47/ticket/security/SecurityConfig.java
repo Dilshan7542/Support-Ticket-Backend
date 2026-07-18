@@ -9,6 +9,7 @@ import lk.di47.ticket.constant.endpoint.DepartmentEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketCategoryEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketCategoryMappingEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketPriorityEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketStatusEndpoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,6 +63,9 @@ public class SecurityConfig {
                                 TicketCategoryEndpoint.UPDATE,
                                 TicketCategoryMappingEndpoint.CREATE,
                                 TicketCategoryMappingEndpoint.UPDATE,
+                                TicketPriorityEndpoint.CREATE,
+                                TicketPriorityEndpoint.UPDATE,
+                                TicketPriorityEndpoint.DELETE,
                                 TicketStatusEndpoint.CREATE,
                                 TicketStatusEndpoint.UPDATE
                         ).hasRole(SUPER_ADMIN)
@@ -89,6 +93,8 @@ public class SecurityConfig {
                                 TicketCategoryEndpoint.DETAIL,
                                 TicketCategoryMappingEndpoint.LIST,
                                 TicketCategoryMappingEndpoint.DETAIL,
+                                TicketPriorityEndpoint.LIST,
+                                TicketPriorityEndpoint.DETAIL,
                                 TicketStatusEndpoint.LIST,
                                 TicketStatusEndpoint.DETAIL,
                                 DashboardEndpoint.SUMMARY,

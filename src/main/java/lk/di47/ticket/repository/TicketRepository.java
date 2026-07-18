@@ -1,7 +1,6 @@
 package lk.di47.ticket.repository;
 
 import lk.di47.ticket.entity.Ticket;
-import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +16,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long>, JpaSpecif
 
     long countByStatus(TicketStatus status);
 
-    long countByPriority(TicketPriority priority);
+    long countByPriority(String priority);
 
     long countByDepartmentIdIsNull();
 

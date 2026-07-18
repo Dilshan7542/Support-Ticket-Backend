@@ -1,7 +1,6 @@
 package lk.di47.ticket.feature.ticket.dto;
 
 import jakarta.validation.constraints.NotNull;
-import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 
 public record ListTicketRequest(
@@ -22,7 +21,7 @@ public record ListTicketRequest(
         String categoryCode,
         String categoryName,
         String subject,
-        TicketPriority priority,
+        String priority,
         TicketStatus status,
 
         Integer page,

@@ -1,6 +1,5 @@
 package lk.di47.ticket.feature.dashboard.dto;
 
-import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +18,7 @@ public class DashboardRecentTicketResponse {
     private String subject;
     private String categoryName;
     private String categoryCode;
-    private TicketPriority priority;
+    private String priority;
     private TicketStatus status;
     private Long departmentId;
     private String departmentName;

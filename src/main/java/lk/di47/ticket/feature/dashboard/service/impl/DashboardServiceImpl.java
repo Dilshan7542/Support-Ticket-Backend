@@ -9,7 +9,6 @@ import lk.di47.ticket.feature.dashboard.service.DashboardService;
 import lk.di47.ticket.repository.*;
 import lk.di47.ticket.util.enums.MailStatus;
 import lk.di47.ticket.util.enums.Status;
-import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final AiPredictionRepository aiPredictionRepository;
     private final ActivityLogRepository activityLogRepository;
     private final TicketCategoryRepository ticketCategoryRepository;
+    private final TicketPriorityMasterRepository ticketPriorityMasterRepository;
 
     @Override
     public DashboardSummaryResponse getSummary(DashboardRequest request) {
@@ -74,8 +74,8 @@ public class DashboardServiceImpl implements DashboardService {
                 .openTickets(totalTickets - resolvedTickets - closedTickets)
                 .resolvedTickets(resolvedTickets)
                 .closedTickets(closedTickets)
-                .criticalTickets(ticketRepository.countByPriority(TicketPriority.CRITICAL))
-                .highPriorityTickets(ticketRepository.countByPriority(TicketPriority.HIGH))
+                .criticalTickets(ticketRepository.countByPriority("CRITICAL"))
+                .highPriorityTickets(ticketRepository.countByPriority("HIGH"))
                 .unassignedTickets(ticketRepository.countByDepartmentIdIsNull())
                 .todayTickets(ticketRepository.countByCreatedAtBetween(todayStart, todayEnd))
                 .activeUsers(userRepository.countByStatus(Status.ACTIVE))
@@ -100,14 +100,10 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private List<DashboardMetricResponse> buildPriorityMetrics() {
-        Map<TicketPriority, Long> metrics = new EnumMap<>(TicketPriority.class);
-        for (TicketPriority priority : TicketPriority.values()) {
-            metrics.put(priority, ticketRepository.countByPriority(priority));
-        }
-        return metrics.entrySet().stream()
+        return ticketPriorityMasterRepository.findByStatusOrderByIdAsc(Status.ACTIVE).stream()
                 .map(entry -> DashboardMetricResponse.builder()
-                        .label(entry.getKey().name())
-                        .value(entry.getValue())
+                        .label(entry.getCode())
+                        .value(ticketRepository.countByPriority(entry.getCode()))
                         .build())
                 .toList();
     }
