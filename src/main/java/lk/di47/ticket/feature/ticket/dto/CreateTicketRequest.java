@@ -22,7 +22,9 @@ public record CreateTicketRequest(
         String title,
 
         @Size(max = 2000)
-        String message
+        String message,
+
+        Boolean aiPredictionEnabled
 ) {
     public String effectiveSubject() {
         return hasText(subject) ? subject : title;

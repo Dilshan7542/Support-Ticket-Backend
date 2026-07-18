@@ -77,6 +77,7 @@ public class TicketServiceImpl implements TicketService {
     public TicketResponse createTicket(CreateTicketRequest request) {
         String subject = requireText(request.effectiveSubject(), "Subject is required");
         String description = requireText(request.effectiveDescription(), "Description is required");
+        UserRole requesterRole = resolveUserRole(request.userId());
 
         Ticket ticket = new Ticket();
         ticket.setTicketNo(TicketNumberGenerator.generate());
@@ -90,8 +91,13 @@ public class TicketServiceImpl implements TicketService {
         ticket.setStatus(TicketStatus.NEW);
         ticket.setCreatedAt(LocalDateTime.now());
 
-        AiPredictionResponse prediction = predictTicketSafely(request);
-        applyPrediction(ticket, request.categoryCode(), prediction);
+        boolean predictWithAi = shouldPredictWithAi(request, requesterRole);
+        AiPredictionResponse prediction = predictWithAi ? predictTicketSafely(request) : null;
+        if (predictWithAi) {
+            applyPrediction(ticket, request.categoryCode(), prediction);
+        } else {
+            applyRequestedCategoryOnly(ticket, request.categoryCode());
+        }
 
         Ticket savedTicket = ticketRepository.save(ticket);
         saveAiPrediction(savedTicket.getId(), prediction);
@@ -285,6 +291,13 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
+    private boolean shouldPredictWithAi(CreateTicketRequest request, UserRole requesterRole) {
+        if (requesterRole == UserRole.CUSTOMER) {
+            return true;
+        }
+        return Boolean.TRUE.equals(request.aiPredictionEnabled());
+    }
+
     private void applyPrediction(Ticket ticket, String requestedCategoryCode, AiPredictionResponse prediction) {
         String categoryCode = requestedCategoryCode;
         if ((categoryCode == null || categoryCode.isBlank()) && prediction != null) {
@@ -293,7 +306,25 @@ public class TicketServiceImpl implements TicketService {
         applyCategoryMapping(ticket, categoryCode);
         if (prediction != null) {
             resolvePriority(prediction.priority()).ifPresent(ticket::setPriority);
+            applySuggestedDepartment(ticket, prediction.suggestedDepartmentId());
         }
+    }
+
+    private void applyRequestedCategoryOnly(Ticket ticket, String categoryCode) {
+        if (categoryCode == null || categoryCode.isBlank()) {
+            return;
+        }
+        TicketCategory category = ticketCategoryRepository.findByCodeAndStatus(categoryCode, Status.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category not found"));
+        ticket.setCategoryId(category.getId());
+        ticket.setCategoryCode(category.getCode());
+    }
+
+    private void applySuggestedDepartment(Ticket ticket, Long suggestedDepartmentId) {
+        if (ticket.getDepartmentId() != null || suggestedDepartmentId == null) {
+            return;
+        }
+        applyDepartmentMapping(ticket, suggestedDepartmentId);
     }
 
     private void applyCategoryMapping(Ticket ticket, String categoryCode) {
