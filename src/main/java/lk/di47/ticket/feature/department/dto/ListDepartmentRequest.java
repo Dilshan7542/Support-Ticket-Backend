@@ -6,7 +6,7 @@ public record ListDepartmentRequest(
         @NotNull(message = "userId is required")
         Long userId,
 
-        Long companyId,
+        Long vendorId,
 
         Integer page,
         Integer size

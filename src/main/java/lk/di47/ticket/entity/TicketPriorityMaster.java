@@ -24,6 +24,8 @@ public class TicketPriorityMaster {
     @Column(nullable = false, unique = true, length = 64)
     private String code;
 
+    private Integer level;
+
     @Column(length = 255)
     private String description;
 

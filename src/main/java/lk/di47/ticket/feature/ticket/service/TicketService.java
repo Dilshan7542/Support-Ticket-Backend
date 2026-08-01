@@ -4,7 +4,7 @@ import lk.di47.ticket.feature.ticket.dto.*;
 import lk.di47.ticket.response.PageResponse;
 
 public interface TicketService {
-    TicketResponse createTicket(CreateTicketRequest request);
+    TicketResponse createTicket(CreateTicketRequest request, Long currentUserId);
 
     PageResponse<TicketResponse> getTickets(ListTicketRequest request);
 

@@ -1,6 +1,5 @@
 package lk.di47.ticket.feature.ticketcategory.service.impl;
 
-import lk.di47.ticket.entity.Company;
 import lk.di47.ticket.entity.Department;
 import lk.di47.ticket.entity.TicketCategory;
 import lk.di47.ticket.entity.TicketCategoryDepartmentMapping;
@@ -13,7 +12,6 @@ import lk.di47.ticket.feature.ticketcategory.dto.TicketCategoryMappingDetailRequ
 import lk.di47.ticket.feature.ticketcategory.dto.TicketCategoryMappingResponse;
 import lk.di47.ticket.feature.ticketcategory.dto.UpdateTicketCategoryMappingRequest;
 import lk.di47.ticket.feature.ticketcategory.service.TicketCategoryMappingService;
-import lk.di47.ticket.repository.CompanyRepository;
 import lk.di47.ticket.repository.DepartmentRepository;
 import lk.di47.ticket.repository.TicketCategoryDepartmentMappingRepository;
 import lk.di47.ticket.repository.TicketCategoryRepository;
@@ -31,20 +29,18 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class TicketCategoryMappingServiceImpl implements TicketCategoryMappingService {
     private final TicketCategoryDepartmentMappingRepository mappingRepository;
-    private final CompanyRepository companyRepository;
     private final TicketCategoryRepository ticketCategoryRepository;
     private final DepartmentRepository departmentRepository;
 
     @Override
     @Transactional
     public TicketCategoryMappingResponse create(CreateTicketCategoryMappingRequest request) {
-        validateMappingParents(request.companyId(), request.categoryId(), request.departmentId());
-        if (mappingRepository.existsByCompanyIdAndCategoryId(request.companyId(), request.categoryId())) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Category mapping already exists for selected company");
+        validateMappingParents(request.categoryId(), request.departmentId());
+        if (mappingRepository.existsByCategoryIdAndStatus(request.categoryId(), Status.ACTIVE)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Active category mapping already exists");
         }
 
         TicketCategoryDepartmentMapping mapping = new TicketCategoryDepartmentMapping();
-        mapping.setCompanyId(request.companyId());
         mapping.setCategoryId(request.categoryId());
         mapping.setDepartmentId(request.departmentId());
         mapping.setStatus(Status.ACTIVE);
@@ -67,16 +63,16 @@ public class TicketCategoryMappingServiceImpl implements TicketCategoryMappingSe
     @Transactional
     public TicketCategoryMappingResponse update(UpdateTicketCategoryMappingRequest request) {
         TicketCategoryDepartmentMapping mapping = findMapping(request.mappingId());
-        validateMappingParents(request.companyId(), request.categoryId(), request.departmentId());
-        if (mappingRepository.existsByCompanyIdAndCategoryIdAndIdNot(
-                request.companyId(),
+        validateMappingParents(request.categoryId(), request.departmentId());
+        Status requestedStatus = request.status() == null ? mapping.getStatus() : request.status();
+        if (Status.ACTIVE.equals(requestedStatus) && mappingRepository.existsByCategoryIdAndStatusAndIdNot(
                 request.categoryId(),
+                Status.ACTIVE,
                 request.mappingId()
         )) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Category mapping already exists for selected company");
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Active category mapping already exists");
         }
 
-        mapping.setCompanyId(request.companyId());
         mapping.setCategoryId(request.categoryId());
         mapping.setDepartmentId(request.departmentId());
         if (request.status() != null) {
@@ -88,12 +84,6 @@ public class TicketCategoryMappingServiceImpl implements TicketCategoryMappingSe
 
     private Page<TicketCategoryDepartmentMapping> findMappings(ListTicketCategoryMappingRequest request) {
         var pageable = PaginationUtil.toPageable(request.page(), request.size());
-        if (request.companyId() != null && request.categoryId() != null) {
-            return mappingRepository.findByCompanyIdAndCategoryId(request.companyId(), request.categoryId(), pageable);
-        }
-        if (request.companyId() != null) {
-            return mappingRepository.findByCompanyId(request.companyId(), pageable);
-        }
         if (request.categoryId() != null) {
             return mappingRepository.findByCategoryId(request.categoryId(), pageable);
         }
@@ -105,13 +95,7 @@ public class TicketCategoryMappingServiceImpl implements TicketCategoryMappingSe
                 .orElseThrow(() -> new NotFoundException("Ticket category mapping not found"));
     }
 
-    private void validateMappingParents(Long companyId, Long categoryId, Long departmentId) {
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new NotFoundException("Company not found"));
-        if (company.getStatus() != Status.ACTIVE) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Company is not active");
-        }
-
+    private void validateMappingParents(Long categoryId, Long departmentId) {
         TicketCategory category = ticketCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Ticket category not found"));
         if (category.getStatus() != Status.ACTIVE) {
@@ -123,19 +107,13 @@ public class TicketCategoryMappingServiceImpl implements TicketCategoryMappingSe
         if (department.getStatus() != Status.ACTIVE) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department is not active");
         }
-        if (!companyId.equals(department.getCompanyId())) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department does not belong to selected company");
-        }
     }
 
     private TicketCategoryMappingResponse toResponse(TicketCategoryDepartmentMapping mapping) {
-        Company company = companyRepository.findById(mapping.getCompanyId()).orElse(null);
         TicketCategory category = ticketCategoryRepository.findById(mapping.getCategoryId()).orElse(null);
         Department department = departmentRepository.findById(mapping.getDepartmentId()).orElse(null);
         return new TicketCategoryMappingResponse(
                 mapping.getId(),
-                mapping.getCompanyId(),
-                company == null ? null : company.getName(),
                 mapping.getCategoryId(),
                 category == null ? null : category.getCode(),
                 category == null ? null : category.getName(),

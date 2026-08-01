@@ -14,13 +14,13 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     boolean existsByNameAndIdNot(String name, Long id);
 
-    boolean existsByCompanyIdAndName(Long companyId, String name);
+    boolean existsByVendorIdAndName(Long vendorId, String name);
 
-    boolean existsByCompanyIdAndNameAndIdNot(Long companyId, String name, Long id);
+    boolean existsByVendorIdAndNameAndIdNot(Long vendorId, String name, Long id);
 
-    boolean existsByCompanyIdAndCode(Long companyId, String code);
+    boolean existsByVendorIdAndCode(Long vendorId, String code);
 
-    boolean existsByCompanyIdAndCodeAndIdNot(Long companyId, String code, Long id);
+    boolean existsByVendorIdAndCodeAndIdNot(Long vendorId, String code, Long id);
 
     boolean existsByCode(String code);
 
@@ -28,7 +28,7 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     long countByStatus(Status status);
 
-    Page<Department> findByCompanyId(Long companyId, Pageable pageable);
+    Page<Department> findByVendorId(Long vendorId, Pageable pageable);
 
     List<Department> findByIdIn(Collection<Long> ids);
 

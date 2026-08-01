@@ -12,27 +12,28 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "company")
-public class Company {
+@Table(name = "vendor")
+public class Vendor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(nullable = false, unique = true, length = 50)
     private String code;
 
-    @Column(length = 255)
+    @Column(length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
 
-    @Column(nullable = false)
+    @Column(name = "created_date", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "modified_date")
     private LocalDateTime updatedAt;
 }

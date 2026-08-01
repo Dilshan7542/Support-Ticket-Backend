@@ -6,9 +6,6 @@ public record CreateTicketCategoryMappingRequest(
         @NotNull(message = "userId is required")
         Long userId,
 
-        @NotNull(message = "companyId is required")
-        Long companyId,
-
         @NotNull(message = "categoryId is required")
         Long categoryId,
 

@@ -40,8 +40,7 @@ public class TicketController {
     public ApiResponse<TicketResponse> createTicket(@Valid @RequestBody CreateTicketRequest request,
                                                     HttpServletRequest servletRequest) {
         log.debug("Create Ticket -> {}", this.toJson(request));
-        validateCurrentUser(request.userId(), servletRequest);
-        return ApiResponse.success(MessageConstant.CREATED, ticketService.createTicket(request));
+        return ApiResponse.success(MessageConstant.CREATED, ticketService.createTicket(request, currentUserId(servletRequest)));
     }
 
     @PostMapping(TicketEndpoint.LIST)

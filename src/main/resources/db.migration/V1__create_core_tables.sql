@@ -1,4 +1,6 @@
 drop database if exists ticket_v1;
+CREATE DATABASE ticket_v3;
+USE ticket_3;
 CREATE TABLE IF NOT EXISTS app_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
@@ -14,28 +16,28 @@ CREATE TABLE IF NOT EXISTS app_user (
     updated_at DATETIME NULL
 );
 
-CREATE TABLE IF NOT EXISTS company (
+CREATE TABLE IF NOT EXISTS vendor (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE,
-    code VARCHAR(64) NOT NULL UNIQUE,
-    description VARCHAR(255),
-    status VARCHAR(20) NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NULL
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description VARCHAR(500),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_vendor_code UNIQUE (code)
 );
 
 CREATE TABLE IF NOT EXISTS department (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    code VARCHAR(64) NOT NULL,
-    company_id BIGINT NOT NULL,
-    description VARCHAR(255),
-    status VARCHAR(20) NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NULL,
-    UNIQUE KEY uk_department_company_name (company_id, name),
-    UNIQUE KEY uk_department_company_code (company_id, code),
-    CONSTRAINT fk_department_company FOREIGN KEY (company_id) REFERENCES company(id)
+    vendor_id BIGINT NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    description VARCHAR(500),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_department_code UNIQUE (code),
+    CONSTRAINT fk_department_vendor FOREIGN KEY (vendor_id) REFERENCES vendor(id)
 );
 
 CREATE TABLE IF NOT EXISTS ticket_category (
@@ -50,15 +52,12 @@ CREATE TABLE IF NOT EXISTS ticket_category (
 
 CREATE TABLE IF NOT EXISTS ticket_category_department_mapping (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    company_id BIGINT NOT NULL,
     category_id BIGINT NOT NULL,
     department_id BIGINT NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NULL,
-    UNIQUE KEY uk_mapping_company_category (company_id, category_id),
-    INDEX idx_mapping_department_id (department_id),
-    CONSTRAINT fk_mapping_company FOREIGN KEY (company_id) REFERENCES company(id),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modified_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_mapping_category UNIQUE (category_id),
     CONSTRAINT fk_mapping_category FOREIGN KEY (category_id) REFERENCES ticket_category(id),
     CONSTRAINT fk_mapping_department FOREIGN KEY (department_id) REFERENCES department(id)
 );
@@ -77,7 +76,7 @@ CREATE TABLE IF NOT EXISTS ticket (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_no VARCHAR(50) NOT NULL UNIQUE,
     customer_id BIGINT NOT NULL,
-    company_id BIGINT NULL,
+    vendor_id BIGINT NULL,
     department_id BIGINT NULL,
     category_id BIGINT NULL,
     assigned_staff_id BIGINT NULL,
@@ -85,6 +84,7 @@ CREATE TABLE IF NOT EXISTS ticket (
     description TEXT NOT NULL,
     category_code VARCHAR(64),
     priority VARCHAR(20) NOT NULL,
+    requires_manual_review BOOLEAN NOT NULL DEFAULT FALSE,
     status VARCHAR(30) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NULL,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS ticket (
     INDEX idx_ticket_department_id (department_id),
     INDEX idx_ticket_category_id (category_id),
     CONSTRAINT fk_ticket_customer FOREIGN KEY (customer_id) REFERENCES app_user(id),
-    CONSTRAINT fk_ticket_company FOREIGN KEY (company_id) REFERENCES company(id) ON DELETE SET NULL,
+    CONSTRAINT fk_ticket_vendor FOREIGN KEY (vendor_id) REFERENCES vendor(id) ON DELETE SET NULL,
     CONSTRAINT fk_ticket_department FOREIGN KEY (department_id) REFERENCES department(id) ON DELETE SET NULL,
     CONSTRAINT fk_ticket_category FOREIGN KEY (category_id) REFERENCES ticket_category(id) ON DELETE SET NULL,
     CONSTRAINT fk_ticket_assigned_staff FOREIGN KEY (assigned_staff_id) REFERENCES app_user(id) ON DELETE SET NULL
@@ -142,14 +142,14 @@ CREATE TABLE IF NOT EXISTS ai_prediction (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_id BIGINT NOT NULL,
     predicted_category VARCHAR(50),
-    predicted_priority VARCHAR(20),
-    suggested_department_id BIGINT,
-    confidence_score DECIMAL(5,2),
+    category_confidence DECIMAL(6,5),
+    priority_confidence DECIMAL(6,5),
+    predicted_priority VARCHAR(64),
+    requires_manual_review BOOLEAN NOT NULL DEFAULT FALSE,
     raw_response TEXT,
     created_at DATETIME NOT NULL,
     INDEX idx_ai_prediction_ticket_id (ticket_id),
-    CONSTRAINT fk_ai_prediction_ticket FOREIGN KEY (ticket_id) REFERENCES ticket(id),
-    CONSTRAINT fk_ai_prediction_suggested_department FOREIGN KEY (suggested_department_id) REFERENCES department(id) ON DELETE SET NULL
+    CONSTRAINT fk_ai_prediction_ticket FOREIGN KEY (ticket_id) REFERENCES ticket(id)
 );
 
 CREATE TABLE IF NOT EXISTS activity_log (
@@ -192,35 +192,10 @@ CREATE TABLE IF NOT EXISTS ticket_priority (
                                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                                name VARCHAR(100) NOT NULL,
                                                code VARCHAR(64) NOT NULL UNIQUE,
+                                               level INT NULL,
                                                description VARCHAR(255),
                                                status VARCHAR(20) NOT NULL,
                                                created_at DATETIME NOT NULL,
                                                updated_at DATETIME NULL
 );
-INSERT INTO ticket_status (name, code, description, status, created_at)
-SELECT 'New', 'NEW', 'Ticket has been created', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'NEW');
 
-INSERT INTO ticket_status (name, code, description, status, created_at)
-SELECT 'Assigned', 'ASSIGNED', 'Ticket has been assigned', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'ASSIGNED');
-
-INSERT INTO ticket_status (name, code, description, status, created_at)
-SELECT 'In Progress', 'IN_PROGRESS', 'Ticket is being handled', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'IN_PROGRESS');
-
-INSERT INTO ticket_status (name, code, description, status, created_at)
-SELECT 'Waiting For Customer', 'WAITING_FOR_CUSTOMER', 'Waiting for customer response', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'WAITING_FOR_CUSTOMER');
-
-INSERT INTO ticket_status (name, code, description, status, created_at)
-SELECT 'Resolved', 'RESOLVED', 'Ticket has been resolved', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'RESOLVED');
-
-INSERT INTO ticket_status (name, code, description, status, created_at)
-SELECT 'Closed', 'CLOSED', 'Ticket has been closed', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'CLOSED');
-
-INSERT INTO ticket_status (name, code, description, status, created_at)
-SELECT 'Reopened', 'REOPENED', 'Ticket has been reopened', 'ACTIVE', NOW()
-WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'REOPENED');

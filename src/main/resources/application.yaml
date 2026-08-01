@@ -42,8 +42,9 @@ server:
 
 app:
   ai:
-    mode: ${APP_AI_MODE:java}
-    base-url: ${APP_AI_BASE_URL:http://localhost:5000}
+    mode: ${APP_AI_MODE:python}
+    base-url: ${APP_AI_BASE_URL:http://localhost:8000}
+    confidence-threshold: ${APP_AI_CONFIDENCE_THRESHOLD:0.60}
   mail:
     from: ${APP_MAIL_FROM:${spring.mail.username}}
   attachment:

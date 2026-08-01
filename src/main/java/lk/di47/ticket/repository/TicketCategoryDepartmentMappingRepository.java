@@ -9,19 +9,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface TicketCategoryDepartmentMappingRepository extends JpaRepository<TicketCategoryDepartmentMapping, Long> {
-    boolean existsByCompanyIdAndCategoryId(Long companyId, Long categoryId);
+    boolean existsByCategoryIdAndStatus(Long categoryId, Status status);
 
-    boolean existsByCompanyIdAndCategoryIdAndIdNot(Long companyId, Long categoryId, Long id);
-
-    Optional<TicketCategoryDepartmentMapping> findByCompanyIdAndCategoryIdAndStatus(
-            Long companyId,
-            Long categoryId,
-            Status status
-    );
-
-    Page<TicketCategoryDepartmentMapping> findByCompanyId(Long companyId, Pageable pageable);
+    boolean existsByCategoryIdAndStatusAndIdNot(Long categoryId, Status status, Long id);
 
     Page<TicketCategoryDepartmentMapping> findByCategoryId(Long categoryId, Pageable pageable);
 
-    Page<TicketCategoryDepartmentMapping> findByCompanyIdAndCategoryId(Long companyId, Long categoryId, Pageable pageable);
+    Optional<TicketCategoryDepartmentMapping> findByCategoryIdAndStatus(Long categoryId, Status status);
 }

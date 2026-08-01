@@ -10,9 +10,6 @@ public record UpdateTicketCategoryMappingRequest(
         @NotNull(message = "mappingId is required")
         Long mappingId,
 
-        @NotNull(message = "companyId is required")
-        Long companyId,
-
         @NotNull(message = "categoryId is required")
         Long categoryId,
 

@@ -1,6 +1,6 @@
 package lk.di47.ticket.feature.department.service.impl;
 
-import lk.di47.ticket.entity.Company;
+import lk.di47.ticket.entity.Vendor;
 import lk.di47.ticket.entity.Department;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
@@ -11,7 +11,7 @@ import lk.di47.ticket.feature.department.dto.DepartmentResponse;
 import lk.di47.ticket.feature.department.dto.ListDepartmentRequest;
 import lk.di47.ticket.feature.department.dto.UpdateDepartmentRequest;
 import lk.di47.ticket.feature.department.service.DepartmentService;
-import lk.di47.ticket.repository.CompanyRepository;
+import lk.di47.ticket.repository.VendorRepository;
 import lk.di47.ticket.repository.DepartmentRepository;
 import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.PaginationUtil;
@@ -31,23 +31,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
-    private final CompanyRepository companyRepository;
+    private final VendorRepository vendorRepository;
 
     @Override
     @Transactional
     public DepartmentResponse create(CreateDepartmentRequest request) {
-        validateCompany(request.companyId());
-        if (existsDepartmentName(request.companyId(), request.name())) {
+        validateVendor(request.vendorId());
+        if (existsDepartmentName(request.vendorId(), request.name())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department already exists");
         }
-        if (existsDepartmentCode(request.companyId(), request.code())) {
+        if (existsDepartmentCode(request.vendorId(), request.code())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department code already exists");
         }
 
         Department department = new Department();
         department.setName(request.name());
         department.setCode(request.code());
-        department.setCompanyId(request.companyId());
+        department.setVendorId(request.vendorId());
         department.setDescription(request.description());
         department.setStatus(Status.ACTIVE);
         department.setCreatedAt(LocalDateTime.now());
@@ -56,12 +56,12 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public PageResponse<DepartmentResponse> list(ListDepartmentRequest request) {
-        validateCompany(request.companyId());
-        Page<Department> departments = request.companyId() == null
+        validateVendor(request.vendorId());
+        Page<Department> departments = request.vendorId() == null
                 ? departmentRepository.findAll(PaginationUtil.toPageable(request.page(), request.size()))
-                : departmentRepository.findByCompanyId(request.companyId(), PaginationUtil.toPageable(request.page(), request.size()));
-        Map<Long, Company> companiesById = loadCompaniesById(departments.getContent());
-        return PageResponse.from(departments, department -> toResponse(department, companiesById.get(department.getCompanyId())));
+                : departmentRepository.findByVendorId(request.vendorId(), PaginationUtil.toPageable(request.page(), request.size()));
+        Map<Long, Vendor> vendorsById = loadVendorsById(departments.getContent());
+        return PageResponse.from(departments, department -> toResponse(department, vendorsById.get(department.getVendorId())));
     }
 
     @Override
@@ -73,16 +73,16 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional
     public DepartmentResponse update(UpdateDepartmentRequest request) {
         Department department = findDepartment(request.departmentId());
-        validateCompany(request.companyId());
-        if (existsDepartmentName(request.companyId(), request.name(), department.getId())) {
+        validateVendor(request.vendorId());
+        if (existsDepartmentName(request.vendorId(), request.name(), department.getId())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department already exists");
         }
-        if (existsDepartmentCode(request.companyId(), request.code(), department.getId())) {
+        if (existsDepartmentCode(request.vendorId(), request.code(), department.getId())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Department code already exists");
         }
         department.setName(request.name());
         department.setCode(request.code());
-        department.setCompanyId(request.companyId());
+        department.setVendorId(request.vendorId());
         department.setDescription(request.description());
         if (request.status() != null) {
             department.setStatus(request.status());
@@ -97,73 +97,73 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     private DepartmentResponse toResponse(Department department) {
-        Company company = department.getCompanyId() == null
+        Vendor vendor = department.getVendorId() == null
                 ? null
-                : companyRepository.findById(department.getCompanyId()).orElse(null);
-        return toResponse(department, company);
+                : vendorRepository.findById(department.getVendorId()).orElse(null);
+        return toResponse(department, vendor);
     }
 
-    private DepartmentResponse toResponse(Department department, Company company) {
+    private DepartmentResponse toResponse(Department department, Vendor vendor) {
         return new DepartmentResponse(
                 department.getId(),
                 department.getName(),
                 department.getCode(),
-                department.getCompanyId(),
-                company == null ? null : company.getName(),
+                department.getVendorId(),
+                vendor == null ? null : vendor.getName(),
                 department.getDescription(),
                 department.getStatus()
         );
     }
 
-    private void validateCompany(Long companyId) {
-        if (companyId == null) {
+    private void validateVendor(Long vendorId) {
+        if (vendorId == null) {
             return;
         }
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new NotFoundException("Company not found"));
-        if (company.getStatus() != Status.ACTIVE) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Company is not active");
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new NotFoundException("Vendor not found"));
+        if (vendor.getStatus() != Status.ACTIVE) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Vendor is not active");
         }
     }
 
-    private boolean existsDepartmentName(Long companyId, String name) {
-        if (companyId == null) {
+    private boolean existsDepartmentName(Long vendorId, String name) {
+        if (vendorId == null) {
             return departmentRepository.existsByName(name);
         }
-        return departmentRepository.existsByCompanyIdAndName(companyId, name);
+        return departmentRepository.existsByVendorIdAndName(vendorId, name);
     }
 
-    private boolean existsDepartmentName(Long companyId, String name, Long excludedDepartmentId) {
-        if (companyId == null) {
+    private boolean existsDepartmentName(Long vendorId, String name, Long excludedDepartmentId) {
+        if (vendorId == null) {
             return departmentRepository.existsByNameAndIdNot(name, excludedDepartmentId);
         }
-        return departmentRepository.existsByCompanyIdAndNameAndIdNot(companyId, name, excludedDepartmentId);
+        return departmentRepository.existsByVendorIdAndNameAndIdNot(vendorId, name, excludedDepartmentId);
     }
 
-    private boolean existsDepartmentCode(Long companyId, String code) {
-        if (companyId == null) {
+    private boolean existsDepartmentCode(Long vendorId, String code) {
+        if (vendorId == null) {
             return departmentRepository.existsByCode(code);
         }
-        return departmentRepository.existsByCompanyIdAndCode(companyId, code);
+        return departmentRepository.existsByVendorIdAndCode(vendorId, code);
     }
 
-    private boolean existsDepartmentCode(Long companyId, String code, Long excludedDepartmentId) {
-        if (companyId == null) {
+    private boolean existsDepartmentCode(Long vendorId, String code, Long excludedDepartmentId) {
+        if (vendorId == null) {
             return departmentRepository.existsByCodeAndIdNot(code, excludedDepartmentId);
         }
-        return departmentRepository.existsByCompanyIdAndCodeAndIdNot(companyId, code, excludedDepartmentId);
+        return departmentRepository.existsByVendorIdAndCodeAndIdNot(vendorId, code, excludedDepartmentId);
     }
 
-    private Map<Long, Company> loadCompaniesById(List<Department> departments) {
-        List<Long> companyIds = departments.stream()
-                .map(Department::getCompanyId)
+    private Map<Long, Vendor> loadVendorsById(List<Department> departments) {
+        List<Long> vendorIds = departments.stream()
+                .map(Department::getVendorId)
                 .filter(java.util.Objects::nonNull)
                 .distinct()
                 .toList();
-        if (companyIds.isEmpty()) {
+        if (vendorIds.isEmpty()) {
             return Map.of();
         }
-        return companyRepository.findByIdIn(companyIds).stream()
-                .collect(Collectors.toMap(Company::getId, Function.identity()));
+        return vendorRepository.findByIdIn(vendorIds).stream()
+                .collect(Collectors.toMap(Vendor::getId, Function.identity()));
     }
 }

@@ -22,9 +22,10 @@ public class AiPrediction {
     private Long ticketId;
 
     private String predictedCategory;
+    private BigDecimal categoryConfidence;
     private String predictedPriority;
-    private Long suggestedDepartmentId;
-    private BigDecimal confidenceScore;
+    private BigDecimal priorityConfidence;
+    private Boolean requiresManualReview;
 
     @Lob
     private String rawResponse;

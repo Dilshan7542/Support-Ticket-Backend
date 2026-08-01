@@ -24,7 +24,7 @@ public class Ticket {
     @Column(nullable = false)
     private Long customerId;
 
-    private Long companyId;
+    private Long vendorId;
     private Long departmentId;
     private Long categoryId;
     private Long assignedStaffId;
@@ -41,6 +41,9 @@ public class Ticket {
 
     @Column(nullable = false, length = 20)
     private String priority;
+
+    @Column(nullable = false)
+    private Boolean requiresManualReview = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

@@ -26,9 +26,6 @@ public class TicketCategoryDepartmentMapping {
     private Long id;
 
     @Column(nullable = false)
-    private Long companyId;
-
-    @Column(nullable = false)
     private Long categoryId;
 
     @Column(nullable = false)
@@ -38,8 +35,9 @@ public class TicketCategoryDepartmentMapping {
     @Column(nullable = false, length = 20)
     private Status status;
 
-    @Column(nullable = false)
+    @Column(name = "created_date", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "modified_date")
     private LocalDateTime updatedAt;
 }

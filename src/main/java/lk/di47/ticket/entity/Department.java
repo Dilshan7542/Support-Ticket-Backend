@@ -18,24 +18,25 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false)
-    private Long companyId;
+    @Column(name = "vendor_id", nullable = false)
+    private Long vendorId;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 50)
     private String code;
 
-    @Column(length = 255)
+    @Column(length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
 
-    @Column(nullable = false)
+    @Column(name = "created_date", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "modified_date")
     private LocalDateTime updatedAt;
 }

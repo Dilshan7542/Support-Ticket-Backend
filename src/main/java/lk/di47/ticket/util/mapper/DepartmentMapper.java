@@ -12,7 +12,7 @@ public final class DepartmentMapper {
                 department.getId(),
                 department.getName(),
                 department.getCode(),
-                department.getCompanyId(),
+                department.getVendorId(),
                 null,
                 department.getDescription(),
                 department.getStatus()

@@ -6,8 +6,8 @@ public record DepartmentResponse(
         Long id,
         String name,
         String code,
-        Long companyId,
-        String companyName,
+        Long vendorId,
+        String vendorName,
         String description,
         Status status
 ) {

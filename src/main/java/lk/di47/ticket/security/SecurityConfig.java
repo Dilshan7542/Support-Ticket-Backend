@@ -3,7 +3,7 @@ package lk.di47.ticket.security;
 import lk.di47.ticket.constant.SecurityPathConstant;
 import lk.di47.ticket.constant.endpoint.ActivityEndpoint;
 import lk.di47.ticket.constant.endpoint.AuthEndpoint;
-import lk.di47.ticket.constant.endpoint.CompanyEndpoint;
+import lk.di47.ticket.constant.endpoint.VendorEndpoint;
 import lk.di47.ticket.constant.endpoint.DashboardEndpoint;
 import lk.di47.ticket.constant.endpoint.DepartmentEndpoint;
 import lk.di47.ticket.constant.endpoint.TicketCategoryEndpoint;
@@ -55,8 +55,8 @@ public class SecurityConfig {
                         .requestMatchers(SecurityPathConstant.PUBLIC_PATHS).permitAll()
                         .requestMatchers(
                                 AuthEndpoint.CREATE_USER,
-                                CompanyEndpoint.CREATE,
-                                CompanyEndpoint.UPDATE,
+                                VendorEndpoint.CREATE,
+                                VendorEndpoint.UPDATE,
                                 DepartmentEndpoint.CREATE,
                                 DepartmentEndpoint.UPDATE,
                                 TicketCategoryEndpoint.CREATE,
@@ -85,8 +85,8 @@ public class SecurityConfig {
                                 TicketEndpoint.DOWNLOAD_ATTACHMENT
                         ).hasAnyRole(CUSTOMER, VIEWER, EDITOR, SUPER_ADMIN)
                         .requestMatchers(
-                                CompanyEndpoint.LIST,
-                                CompanyEndpoint.DETAIL,
+                                VendorEndpoint.LIST,
+                                VendorEndpoint.DETAIL,
                                 DepartmentEndpoint.LIST,
                                 DepartmentEndpoint.DETAIL,
                                 TicketCategoryEndpoint.LIST,

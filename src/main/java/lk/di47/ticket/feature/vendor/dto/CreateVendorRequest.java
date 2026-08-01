@@ -1,22 +1,22 @@
-package lk.di47.ticket.feature.company.dto;
+package lk.di47.ticket.feature.vendor.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record CreateCompanyRequest(
+public record CreateVendorRequest(
         @NotNull(message = "userId is required")
         Long userId,
 
-        @NotBlank(message = "Company name is required")
+        @NotBlank(message = "Vendor name is required")
         @Size(max = 150)
         String name,
 
-        @NotBlank(message = "Company code is required")
-        @Size(max = 30)
+        @NotBlank(message = "Vendor code is required")
+        @Size(max = 50)
         String code,
 
-        @Size(max = 255)
+        @Size(max = 500)
         String description
 ) {
 }

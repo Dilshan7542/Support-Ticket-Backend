@@ -1,8 +1,8 @@
-package lk.di47.ticket.feature.company.dto;
+package lk.di47.ticket.feature.vendor.dto;
 
 import lk.di47.ticket.util.enums.Status;
 
-public record CompanyResponse(
+public record VendorResponse(
         Long id,
         String name,
         String code,

@@ -9,17 +9,17 @@ public record CreateDepartmentRequest(
         Long userId,
 
         @NotBlank(message = "Department name is required")
-        @Size(max = 100)
+        @Size(max = 150)
         String name,
 
         @NotBlank(message = "Department code is required")
-        @Size(max = 30)
+        @Size(max = 50)
         String code,
 
-        @NotNull(message = "companyId is required")
-        Long companyId,
+        @NotNull(message = "vendorId is required")
+        Long vendorId,
 
-        @Size(max = 255)
+        @Size(max = 500)
         String description
 ) {
 }
