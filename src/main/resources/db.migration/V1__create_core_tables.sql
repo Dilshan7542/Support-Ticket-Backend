@@ -1,4 +1,4 @@
-drop database if exists ticket_v1;
+-- drop database if exists ticket_v1;
 CREATE DATABASE ticket_v3;
 USE ticket_3;
 CREATE TABLE IF NOT EXISTS app_user (

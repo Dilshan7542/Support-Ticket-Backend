@@ -298,11 +298,14 @@ public class TicketServiceImpl implements TicketService {
 
     private AiPredictionResponse predictTicket(String subject, String description) {
         try {
-            AiPredictionResponse prediction = aiPredictionService.predictTicket(new AiPredictionRequest(subject, description));
-            if (prediction == null) {
+            AiPredictionRequest predictionRequest = new AiPredictionRequest(subject, description);
+            log.info("AI Predication Request -> {} ",this.toJson(predictionRequest));
+            AiPredictionResponse predictionResponse = aiPredictionService.predictTicket(new AiPredictionRequest(subject, description));
+            log.info("AI Predication Response -> {}",this.toJson(predictionResponse));
+            if (predictionResponse == null) {
                 throw new BusinessException(ErrorCode.INVALID_REQUEST, "AI prediction service returned no prediction");
             }
-            return prediction;
+            return predictionResponse;
         } catch (Exception exception) {
             if (exception instanceof BusinessException businessException) {
                 throw businessException;

@@ -1,0 +1,54 @@
+[
+  {
+    "subject": "Payment deducted but transaction failed",
+    "description": "Money was deducted from my bank account but the merchant payment was unsuccessful."
+  },
+  {
+    "subject": "Unknown transaction detected",
+    "description": "Several transactions that I did not authorize are appearing in my account."
+  },
+  {
+    "subject": "Debit card lost",
+    "description": "I lost my debit card and need it blocked immediately."
+  },
+  {
+    "subject": "Unable to login to mobile banking",
+    "description": "The application keeps rejecting my correct username and password."
+  },
+  {
+    "subject": "OTP not received",
+    "description": "The transaction OTP is not arriving on my registered mobile number."
+  },
+  {
+    "subject": "ATM did not dispense cash",
+    "description": "My account was debited but the ATM did not provide any cash."
+  },
+  {
+    "subject": "Fund transfer is still pending",
+    "description": "The transfer to another bank has remained pending since yesterday."
+  },
+  {
+    "subject": "Transfer made to wrong account",
+    "description": "I accidentally transferred money to an incorrect beneficiary account."
+  },
+  {
+    "subject": "Debit card payment declined",
+    "description": "My card has sufficient funds but merchant payments are being declined."
+  },
+  {
+    "subject": "Refund has not been credited",
+    "description": "The merchant processed a refund but it has not appeared in my account."
+  },
+  {
+    "subject": "Incorrect account balance",
+    "description": "The displayed balance does not match my recent deposits and transactions."
+  },
+  {
+    "subject": "Personal loan interest rate inquiry",
+    "description": "I need information about personal loan rates and eligibility requirements."
+  },
+  {
+    "subject": "Fixed deposit maturity details",
+    "description": "Please provide the maturity date and expected interest for my fixed deposit."
+  }
+]
