@@ -188,7 +188,15 @@ CREATE TABLE IF NOT EXISTS mail_log (
     error_message TEXT NULL,
     created_at DATETIME NOT NULL
 );
-
+CREATE TABLE IF NOT EXISTS ticket_priority (
+                                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                               name VARCHAR(100) NOT NULL,
+                                               code VARCHAR(64) NOT NULL UNIQUE,
+                                               description VARCHAR(255),
+                                               status VARCHAR(20) NOT NULL,
+                                               created_at DATETIME NOT NULL,
+                                               updated_at DATETIME NULL
+);
 INSERT INTO ticket_status (name, code, description, status, created_at)
 SELECT 'New', 'NEW', 'Ticket has been created', 'ACTIVE', NOW()
 WHERE NOT EXISTS (SELECT 1 FROM ticket_status WHERE code = 'NEW');

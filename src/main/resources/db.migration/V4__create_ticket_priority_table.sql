@@ -1,12 +1,4 @@
-CREATE TABLE IF NOT EXISTS ticket_priority (
-                                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                                 name VARCHAR(100) NOT NULL,
-    code VARCHAR(64) NOT NULL UNIQUE,
-    description VARCHAR(255),
-    status VARCHAR(20) NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NULL
-    );
+
 
 INSERT INTO ticket_priority (name, code, description, status, created_at)
 SELECT 'Low', 'LOW', 'Low priority ticket', 'ACTIVE', NOW()
