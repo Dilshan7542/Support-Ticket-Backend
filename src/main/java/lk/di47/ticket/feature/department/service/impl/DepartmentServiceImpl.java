@@ -2,17 +2,25 @@ package lk.di47.ticket.feature.department.service.impl;
 
 import lk.di47.ticket.entity.Vendor;
 import lk.di47.ticket.entity.Department;
+import lk.di47.ticket.entity.TicketCategory;
+import lk.di47.ticket.entity.TicketCategoryDepartmentMapping;
+import lk.di47.ticket.entity.User;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.exception.NotFoundException;
 import lk.di47.ticket.feature.department.dto.CreateDepartmentRequest;
 import lk.di47.ticket.feature.department.dto.DepartmentDetailRequest;
 import lk.di47.ticket.feature.department.dto.DepartmentResponse;
+import lk.di47.ticket.feature.department.dto.DepartmentUserResponse;
+import lk.di47.ticket.feature.department.dto.DepartmentUsersRequest;
 import lk.di47.ticket.feature.department.dto.ListDepartmentRequest;
 import lk.di47.ticket.feature.department.dto.UpdateDepartmentRequest;
 import lk.di47.ticket.feature.department.service.DepartmentService;
 import lk.di47.ticket.repository.VendorRepository;
 import lk.di47.ticket.repository.DepartmentRepository;
+import lk.di47.ticket.repository.TicketCategoryDepartmentMappingRepository;
+import lk.di47.ticket.repository.TicketCategoryRepository;
+import lk.di47.ticket.repository.UserRepository;
 import lk.di47.ticket.response.PageResponse;
 import lk.di47.ticket.util.PaginationUtil;
 import lk.di47.ticket.util.enums.Status;
@@ -24,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,6 +41,9 @@ import java.util.stream.Collectors;
 public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final VendorRepository vendorRepository;
+    private final UserRepository userRepository;
+    private final TicketCategoryRepository ticketCategoryRepository;
+    private final TicketCategoryDepartmentMappingRepository mappingRepository;
 
     @Override
     @Transactional
@@ -91,6 +103,37 @@ public class DepartmentServiceImpl implements DepartmentService {
         return toResponse(departmentRepository.save(department));
     }
 
+    @Override
+    public List<DepartmentUserResponse> users(DepartmentUsersRequest request) {
+        Department department = resolveUserLookupDepartment(request);
+        validateVendor(department.getVendorId());
+        return userRepository.findByVendorIdAndStatus(department.getVendorId(), Status.ACTIVE).stream()
+                .map(this::toUserResponse)
+                .toList();
+    }
+
+    private Department resolveUserLookupDepartment(DepartmentUsersRequest request) {
+        if (request.departmentId() != null) {
+            return findDepartment(request.departmentId());
+        }
+
+        TicketCategory category = request.categoryId() != null
+                ? ticketCategoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new NotFoundException("Ticket category not found"))
+                : ticketCategoryRepository.findByCodeAndStatus(
+                        request.categoryCode().trim().toUpperCase(Locale.ROOT),
+                        Status.ACTIVE
+                ).orElseThrow(() -> new NotFoundException("Ticket category not found"));
+
+        if (category.getStatus() != Status.ACTIVE) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Ticket category is not active");
+        }
+
+        TicketCategoryDepartmentMapping mapping = mappingRepository.findByCategoryIdAndStatus(category.getId(), Status.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Department mapping is not configured"));
+        return findDepartment(mapping.getDepartmentId());
+    }
+
     private Department findDepartment(Long departmentId) {
         return departmentRepository.findById(departmentId)
                 .orElseThrow(() -> new NotFoundException("Department not found"));
@@ -112,6 +155,19 @@ public class DepartmentServiceImpl implements DepartmentService {
                 vendor == null ? null : vendor.getName(),
                 department.getDescription(),
                 department.getStatus()
+        );
+    }
+
+    private DepartmentUserResponse toUserResponse(User user) {
+        return new DepartmentUserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getVendorId(),
+                user.getRole(),
+                user.getStatus()
         );
     }
 

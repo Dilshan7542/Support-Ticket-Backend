@@ -34,6 +34,9 @@ public class User {
     @Column(length = 30)
     private String phone;
 
+    @Column(name = "vendor_id")
+    private Long vendorId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private UserRole role;

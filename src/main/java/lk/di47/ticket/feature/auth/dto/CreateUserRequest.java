@@ -29,6 +29,8 @@ public record CreateUserRequest(
         @Size(max = 30)
         String phone,
 
+        Long vendorId,
+
         @NotNull(message = "role is required")
         UserRole role
 ) {

@@ -8,12 +8,14 @@ CREATE TABLE IF NOT EXISTS app_user (
     full_name VARCHAR(150) NOT NULL,
     email VARCHAR(150),
     phone VARCHAR(30),
+    vendor_id BIGINT NULL,
     role VARCHAR(30) NOT NULL,
     status VARCHAR(20) NOT NULL,
     active_session_id VARCHAR(80),
     refresh_token_hash VARCHAR(128),
     created_at DATETIME NOT NULL,
-    updated_at DATETIME NULL
+    updated_at DATETIME NULL,
+    INDEX idx_app_user_vendor_id ON app_user (vendor_id)
 );
 
 CREATE TABLE IF NOT EXISTS vendor (

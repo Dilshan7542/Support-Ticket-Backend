@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @Log4j2
@@ -44,6 +46,12 @@ public class DepartmentController {
     public ApiResponse<DepartmentResponse> update(@Valid @RequestBody UpdateDepartmentRequest request) {
         log.debug("Update Department -> {}", this.toJson(request));
         return ApiResponse.success(MessageConstant.UPDATED, departmentService.update(request));
+    }
+
+    @PostMapping(DepartmentEndpoint.USERS)
+    public ApiResponse<List<DepartmentUserResponse>> users(@Valid @RequestBody DepartmentUsersRequest request) {
+        log.debug("Department Users -> {}", this.toJson(request));
+        return ApiResponse.success(MessageConstant.SUCCESS, departmentService.users(request));
     }
 
     private String toJson(Object data) {

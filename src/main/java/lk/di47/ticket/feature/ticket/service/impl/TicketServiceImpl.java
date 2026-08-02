@@ -253,15 +253,18 @@ public class TicketServiceImpl implements TicketService {
     public TicketResponse assignTicket(AssignTicketRequest request) {
         Ticket ticket = findTicket(request.ticketId());
         TicketStatus previousStatus = ticket.getStatus();
+        TicketCategory selectedCategory = null;
         if (!isBlank(request.categoryCode())) {
-            TicketCategory category = resolveActiveCategory(request.categoryCode());
-            ticket.setCategoryId(category.getId());
-            ticket.setCategoryCode(category.getCode());
+            selectedCategory = resolveActiveCategory(request.categoryCode());
+            ticket.setCategoryId(selectedCategory.getId());
+            ticket.setCategoryCode(selectedCategory.getCode());
         }
         if (!isBlank(request.priority())) {
             ticket.setPriority(resolveActivePriority(request.priority()).getCode());
         }
         applyDepartmentMapping(ticket, request.departmentId());
+        validateCategoryDepartmentMapping(selectedCategory, ticket.getDepartmentId());
+        validateAssignedStaff(request.assignedStaffId(), ticket.getVendorId());
         ticket.setAssignedStaffId(request.assignedStaffId());
         ticket.setStatus(TicketStatus.ASSIGNED);
         ticket.setUpdatedAt(LocalDateTime.now());
@@ -321,6 +324,31 @@ public class TicketServiceImpl implements TicketService {
         Department department = validateActiveDepartment(departmentId);
         ticket.setDepartmentId(department.getId());
         ticket.setVendorId(department.getVendorId());
+    }
+
+    private void validateCategoryDepartmentMapping(TicketCategory category, Long departmentId) {
+        if (category == null || departmentId == null) {
+            return;
+        }
+        TicketCategoryDepartmentMapping mapping = mappingRepository.findByCategoryIdAndStatus(category.getId(), Status.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Department mapping is not configured"));
+        if (!departmentId.equals(mapping.getDepartmentId())) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Selected category does not belong to selected department");
+        }
+    }
+
+    private void validateAssignedStaff(Long assignedStaffId, Long vendorId) {
+        if (assignedStaffId == null) {
+            return;
+        }
+        User assignedStaff = userRepository.findById(assignedStaffId)
+                .orElseThrow(() -> new NotFoundException("Assigned user not found"));
+        if (assignedStaff.getStatus() != Status.ACTIVE) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Assigned user is not active");
+        }
+        if (vendorId != null && !vendorId.equals(assignedStaff.getVendorId())) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Assigned user does not belong to department vendor");
+        }
     }
 
     private Vendor validateActiveVendor(Long vendorId) {

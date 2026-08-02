@@ -1,12 +1,14 @@
 package lk.di47.ticket.feature.auth.service.impl;
 
 import lk.di47.ticket.entity.User;
+import lk.di47.ticket.entity.Vendor;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.feature.auth.dto.*;
 import lk.di47.ticket.feature.auth.service.AuthService;
 import lk.di47.ticket.feature.security.service.KeyExchangeService;
 import lk.di47.ticket.repository.UserRepository;
+import lk.di47.ticket.repository.VendorRepository;
 import lk.di47.ticket.security.JwtService;
 import lk.di47.ticket.security.JwtTokenData;
 import lk.di47.ticket.util.HashUtil;
@@ -24,6 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
+    private final VendorRepository vendorRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final KeyExchangeService keyExchangeService;
@@ -117,6 +120,7 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByUsername(request.username())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Username already exists");
         }
+        validateVendor(request.vendorId());
 
         User user = new User();
         user.setUsername(request.username());
@@ -124,6 +128,7 @@ public class AuthServiceImpl implements AuthService {
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPhone(request.phone());
+        user.setVendorId(request.vendorId());
         user.setRole(request.role());
         user.setStatus(Status.ACTIVE);
         user.setCreatedAt(LocalDateTime.now());
@@ -140,5 +145,16 @@ public class AuthServiceImpl implements AuthService {
         user.setRefreshTokenHash(null);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
+    }
+
+    private void validateVendor(Long vendorId) {
+        if (vendorId == null) {
+            return;
+        }
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REQUEST, "Vendor not found"));
+        if (vendor.getStatus() != Status.ACTIVE) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Vendor is not active");
+        }
     }
 }
