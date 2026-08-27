@@ -12,10 +12,8 @@ import lk.di47.ticket.response.ApiResponse;
 import lk.di47.ticket.util.mask.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.json.JsonMapper;
 
 @RestController
@@ -24,7 +22,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class AuthController {
     private final AuthService authService;
     private final JsonMapper jsonMapper;
-
+    private final PasswordEncoder passwordEncoder;
     @PostMapping(AuthEndpoint.LOGIN)
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request,
                                             @RequestHeader(SecurityConstant.KEY_ID_HEADER) String encryptionKeyId) {
@@ -75,6 +73,13 @@ public class AuthController {
         return ApiResponse.success(MessageConstant.SUCCESS, null);
     }
 
+    @RequestMapping(value = "/auth/test/{pwd}",method = RequestMethod.OPTIONS)
+    public ApiResponse<String> passwordTest(@PathVariable String pwd){
+        log.debug("Raw Password : "+ pwd);
+        String hashedPwd=this.passwordEncoder.encode(pwd);
+        log.debug("Encoded  Password : "+ pwd);
+        return ApiResponse.success(MessageConstant.SUCCESS, hashedPwd);
+    }
     private String toJson(Object data) {
         return SensitiveDataMasker.mask(jsonMapper.writeValueAsString(data));
     }
