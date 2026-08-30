@@ -5,6 +5,7 @@ import lk.di47.ticket.util.enums.Status;
 import lk.di47.ticket.util.enums.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -15,4 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByRole(UserRole role);
 
     long countByStatus(Status status);
+
+    List<User> findByVendorIdAndStatus(Long vendorId, Status status);
+
+    List<User> findByFullNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(String fullName, String username);
 }

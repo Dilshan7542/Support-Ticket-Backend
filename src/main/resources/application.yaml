@@ -3,8 +3,33 @@ spring:
     name: support-ticket-backend
   profiles:
     active: dev
+  datasource:
+    url: jdbc:mysql://localhost:3306/ticket_v3?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Colombo
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 1234
   jackson:
     default-property-inclusion: non_null
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:epicdmail@gmail.com}
+    password: ${MAIL_PASSWORD:tuczmkoyhxfthkii}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          timeout: ${MAIL_SMTP_TIMEOUT:200000}
+          connectiontimeout: ${MAIL_SMTP_CONNECTION_TIMEOUT:200000}
+          writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT:200000}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:true}
+          ssl:
+            enable: ${MAIL_SMTP_SSL:false}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
   jpa:
     hibernate:
      ddl-auto: none
@@ -16,14 +41,23 @@ server:
   port: 8080
 
 app:
+  ai:
+    mode: ${APP_AI_MODE:python}
+    base-url: ${APP_AI_BASE_URL:http://127.0.0.1:8000}
+    confidence-threshold: ${APP_AI_CONFIDENCE_THRESHOLD:0.60}
+  mail:
+    from: ${APP_MAIL_FROM:${spring.mail.username}}
+  attachment:
+    storage-path: ${APP_ATTACHMENT_STORAGE_PATH:D:/support-ticket-attachments}
+    max-file-size-bytes: ${APP_ATTACHMENT_MAX_FILE_SIZE_BYTES:10485760}
+  jwt:
+    access-token-expiration-minutes: ${APP_JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:2880}
+    refresh-token-expiration-minutes: ${APP_JWT_REFRESH_TOKEN_EXPIRATION_MINUTES:1440}
+    secret: ${APP_JWT_SECRET:change-this-secret-value-in-production-minimum-32-chars}
   crypto:
-    enabled: false
-    excluded-paths: /actuator/**,/api/v1/health/status,/h2-console/**
+    enabled: true
+    excluded-paths: /actuator/**,/api/v1/health/status,/h2-console/**,/api/v1/security/key-exchange,/api/v1/tickets/upload-attachment,/api/v1/tickets/attachments/download,/predict
     secret-key: ${APP_CRYPTO_SECRET_KEY:12345678901234567890123456789012}
-    jwt:
-      access-token-expiration-minutes: 30
-      refresh-token-expiration-minutes: 1440
-      secret: ${APP_JWT_SECRET:change-this-secret-value-in-production-minimum-32-chars}
 
 logging:
   config: classpath:log4j2-spring.xml

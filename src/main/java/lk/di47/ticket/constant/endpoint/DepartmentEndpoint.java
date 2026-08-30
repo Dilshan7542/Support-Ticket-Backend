@@ -12,4 +12,5 @@ public final class DepartmentEndpoint {
     public static final String LIST = BASE + "/list";
     public static final String DETAIL = BASE + "/detail";
     public static final String UPDATE = BASE + "/update";
+    public static final String USERS = BASE + "/users";
 }

@@ -10,6 +10,8 @@ public final class SecurityConstant {
     public static final String TIMESTAMP_HEADER = "X-Timestamp";
     public static final String NONCE_HEADER = "X-Nonce";
     public static final String ENCRYPTION_HEADER = "X-Content-Encryption";
+    public static final String CRYPTO_ACTION_HEADER = "X-Crypto-Action";
+    public static final String RENEW_KEY_EXCHANGE_ACTION = "RENEW_KEY_EXCHANGE";
     public static final String CURRENT_USER_ID = "CURRENT_USER_ID";
     public static final String CURRENT_SESSION_ID = "CURRENT_SESSION_ID";
     public static final String CURRENT_ENCRYPTION_KEY_ID = "CURRENT_ENCRYPTION_KEY_ID";

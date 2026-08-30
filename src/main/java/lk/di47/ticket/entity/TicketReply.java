@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "ticket_replies")
+@Table(name = "ticket_reply")
 public class TicketReply {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

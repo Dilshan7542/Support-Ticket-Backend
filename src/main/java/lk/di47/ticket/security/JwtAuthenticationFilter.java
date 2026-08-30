@@ -12,18 +12,16 @@ import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.feature.security.service.KeyExchangeService;
 import lk.di47.ticket.repository.UserRepository;
-import lk.di47.ticket.response.ApiResponse;
+import lk.di47.ticket.response.ApiErrorResponseWriter;
 import lk.di47.ticket.util.enums.Status;
 import lk.di47.ticket.util.enums.TokenType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -36,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final KeyExchangeService keyExchangeService;
-    private final JsonMapper jsonMapper;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
@@ -62,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
         } catch (BusinessException exception) {
-            writeUnauthorizedResponse(response, exception.getMessage());
+            apiErrorResponseWriter.write(response, exception);
         } finally {
             SecurityContextHolder.clearContext();
         }
@@ -96,16 +94,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Session is no longer active");
         }
 
-        keyExchangeService.validateOwnership(encryptionKeyId, user.getId());
+        keyExchangeService.validateSession(encryptionKeyId);
         return new ValidatedUserContext(user.getId(), user.getUsername(), user.getRole().name(), tokenData.sessionId(), encryptionKeyId);
-    }
-
-    private void writeUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
-        if (response.isCommitted()) {
-            return;
-        }
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        jsonMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, null));
     }
 }

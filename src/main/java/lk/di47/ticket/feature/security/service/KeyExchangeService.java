@@ -14,9 +14,7 @@ public interface KeyExchangeService {
 
     void registerNonce(String keyId, String nonce);
 
-    void bindToUser(String keyId, Long userId);
-
-    void validateOwnership(String keyId, Long userId);
+    void validateSession(String keyId);
 
     void invalidate(String keyId);
 

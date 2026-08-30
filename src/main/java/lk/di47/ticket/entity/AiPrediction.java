@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "ai_predictions")
+@Table(name = "ai_prediction")
 public class AiPrediction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,9 +22,10 @@ public class AiPrediction {
     private Long ticketId;
 
     private String predictedCategory;
+    private BigDecimal categoryConfidence;
     private String predictedPriority;
-    private Long suggestedDepartmentId;
-    private BigDecimal confidenceScore;
+    private BigDecimal priorityConfidence;
+    private Boolean requiresManualReview;
 
     @Lob
     private String rawResponse;

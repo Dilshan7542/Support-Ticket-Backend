@@ -14,6 +14,7 @@ import lk.di47.ticket.crypto.SessionCryptoService;
 import lk.di47.ticket.exception.BusinessException;
 import lk.di47.ticket.exception.ErrorCode;
 import lk.di47.ticket.feature.security.service.KeyExchangeService;
+import lk.di47.ticket.response.ApiErrorResponseWriter;
 import lk.di47.ticket.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
@@ -35,6 +36,7 @@ public class EncryptionFilter extends OncePerRequestFilter {
     private final CryptoProperties properties;
     private final KeyExchangeService keyExchangeService;
     private final SessionCryptoService sessionCryptoService;
+    private final ApiErrorResponseWriter apiErrorResponseWriter;
     private final JsonMapper jsonMapper;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -50,6 +52,10 @@ public class EncryptionFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        if(shouldNotFilter(request)){
+            filterChain.doFilter(request, response);
+            return;
+        }
         String keyId = request.getHeader(SecurityConstant.KEY_ID_HEADER);
         String timestamp = request.getHeader(SecurityConstant.TIMESTAMP_HEADER);
         String nonce = request.getHeader(SecurityConstant.NONCE_HEADER);
@@ -77,9 +83,13 @@ public class EncryptionFilter extends OncePerRequestFilter {
             CachedBodyHttpServletRequest wrappedRequest = new CachedBodyHttpServletRequest(request, decryptedRequest);
             filterChain.doFilter(wrappedRequest, wrappedResponse);
         } catch (BusinessException exception) {
-            writeError(wrappedResponse, resolveStatus(exception), exception.getMessage());
+            apiErrorResponseWriter.write(wrappedResponse, exception);
         } catch (Exception exception) {
-            writeError(wrappedResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to process encrypted request");
+            apiErrorResponseWriter.writeInternalServerError(
+                    wrappedResponse,
+                    "Unable to process encrypted request",
+                    exception
+            );
         }
 
         if (keyExchangeService.isActive(keyId)) {
@@ -94,10 +104,10 @@ public class EncryptionFilter extends OncePerRequestFilter {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Missing X-Key-Id header");
         }
         if (timestamp == null || timestamp.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Missing X-Timestamp header");
+            throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Missing X-Timestamp header");
         }
         if (nonce == null || nonce.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Missing X-Nonce header");
+            throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Missing X-Nonce header");
         }
     }
 
@@ -124,19 +134,5 @@ public class EncryptionFilter extends OncePerRequestFilter {
         response.setHeader(SecurityConstant.ENCRYPTION_HEADER, "AES-256-GCM");
         response.getOutputStream().write(encryptedBytes);
         response.copyBodyToResponse();
-    }
-
-    private void writeError(ContentCachingResponseWrapper response, int status, String message) throws IOException {
-        response.resetBuffer();
-        response.setStatus(status);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        jsonMapper.writeValue(response.getOutputStream(), ApiResponse.failed(message, null));
-    }
-
-    private int resolveStatus(BusinessException exception) {
-        return exception.getErrorCode() == ErrorCode.UNAUTHORIZED
-                ? HttpServletResponse.SC_UNAUTHORIZED
-                : HttpServletResponse.SC_BAD_REQUEST;
     }
 }

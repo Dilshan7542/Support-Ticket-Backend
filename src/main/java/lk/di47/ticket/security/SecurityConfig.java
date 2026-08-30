@@ -1,6 +1,16 @@
 package lk.di47.ticket.security;
 
 import lk.di47.ticket.constant.SecurityPathConstant;
+import lk.di47.ticket.constant.endpoint.ActivityEndpoint;
+import lk.di47.ticket.constant.endpoint.AuthEndpoint;
+import lk.di47.ticket.constant.endpoint.VendorEndpoint;
+import lk.di47.ticket.constant.endpoint.DashboardEndpoint;
+import lk.di47.ticket.constant.endpoint.DepartmentEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketCategoryEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketCategoryMappingEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketPriorityEndpoint;
+import lk.di47.ticket.constant.endpoint.TicketStatusEndpoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -28,6 +38,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private static final String CUSTOMER = "CUSTOMER";
+    private static final String VIEWER = "VIEWER";
+    private static final String EDITOR = "EDITOR";
+    private static final String SUPER_ADMIN = "SUPER_ADMIN";
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -39,6 +53,54 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(SecurityPathConstant.PUBLIC_PATHS).permitAll()
+                        .requestMatchers(
+                                AuthEndpoint.CREATE_USER,
+                                VendorEndpoint.CREATE,
+                                VendorEndpoint.UPDATE,
+                                DepartmentEndpoint.CREATE,
+                                DepartmentEndpoint.UPDATE,
+                                TicketCategoryEndpoint.CREATE,
+                                TicketCategoryEndpoint.UPDATE,
+                                TicketCategoryMappingEndpoint.CREATE,
+                                TicketCategoryMappingEndpoint.UPDATE,
+                                TicketPriorityEndpoint.CREATE,
+                                TicketPriorityEndpoint.UPDATE,
+                                TicketPriorityEndpoint.DELETE,
+                                TicketStatusEndpoint.CREATE,
+                                TicketStatusEndpoint.UPDATE
+                        ).hasRole(SUPER_ADMIN)
+                        .requestMatchers(
+                                TicketEndpoint.CREATE,
+                                TicketEndpoint.ADD_REPLY,
+                                TicketEndpoint.UPLOAD_ATTACHMENT
+                        ).hasAnyRole(CUSTOMER, VIEWER, EDITOR, SUPER_ADMIN)
+                        .requestMatchers(
+                                TicketEndpoint.UPDATE_STATUS,
+                                TicketEndpoint.ASSIGN
+                        ).hasAnyRole(EDITOR, SUPER_ADMIN)
+                        .requestMatchers(
+                                AuthEndpoint.LOGOUT,
+                                TicketEndpoint.LIST,
+                                TicketEndpoint.DETAIL,
+                                TicketEndpoint.DOWNLOAD_ATTACHMENT
+                        ).hasAnyRole(CUSTOMER, VIEWER, EDITOR, SUPER_ADMIN)
+                        .requestMatchers(
+                                VendorEndpoint.LIST,
+                                VendorEndpoint.DETAIL,
+                                DepartmentEndpoint.LIST,
+                                DepartmentEndpoint.DETAIL,
+                                TicketCategoryEndpoint.LIST,
+                                TicketCategoryEndpoint.DETAIL,
+                                TicketCategoryMappingEndpoint.LIST,
+                                TicketCategoryMappingEndpoint.DETAIL,
+                                TicketPriorityEndpoint.LIST,
+                                TicketPriorityEndpoint.DETAIL,
+                                TicketStatusEndpoint.LIST,
+                                TicketStatusEndpoint.DETAIL,
+                                DashboardEndpoint.SUMMARY,
+                                ActivityEndpoint.LIST,
+                                ActivityEndpoint.DETAIL
+                        ).hasAnyRole(VIEWER, EDITOR, SUPER_ADMIN)
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -47,10 +109,10 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
-            @Value("${app.security.allowed-origins:http://localhost:3000,http://localhost:5173}") String allowedOrigins) {
+            @Value("${app.security.allowed-origins:http://localhost:4200,http://localhost:5173}") String allowedOrigins) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.stream(allowedOrigins.split(",")).map(String::trim).toList());
-        configuration.setAllowedMethods(List.of("POST", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
                 "Content-Type",
                 "Authorization",
@@ -59,7 +121,15 @@ public class SecurityConfig {
                 "X-Nonce",
                 "X-Trace-Id"
         ));
-        configuration.setExposedHeaders(List.of("X-Key-Id", "X-Content-Encryption", "X-Trace-Id"));
+        configuration.setExposedHeaders(List.of(
+                "Content-Disposition",
+                "X-Attachment-Id",
+                "X-File-Name",
+                "X-Key-Id",
+                "X-Content-Encryption",
+                "X-Crypto-Action",
+                "X-Trace-Id"
+        ));
         configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 

@@ -8,5 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @ConfigurationProperties(prefix = "app.ai")
 public class AiPredictionClientProperties {
-    private String baseUrl = "http://localhost:5000";
+    private String mode = "python";
+    private String baseUrl = "http://localhost:8000";
+    private double confidenceThreshold = 0.60;
 }

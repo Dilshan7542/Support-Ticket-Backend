@@ -40,7 +40,7 @@ public class SessionCryptoService {
         } catch (BusinessException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Unable to encrypt response");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Unable to encrypt response", exception);
         }
     }
 
@@ -48,7 +48,7 @@ public class SessionCryptoService {
         try {
             byte[] iv = Base64.getDecoder().decode(payload.iv());
             if (iv.length != IV_LENGTH_BYTES) {
-                throw new BusinessException(ErrorCode.INVALID_REQUEST, "Invalid encryption IV");
+                throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Invalid encryption IV");
             }
 
             byte[] cipherText = Base64.getDecoder().decode(payload.cipherText());
@@ -59,7 +59,7 @@ public class SessionCryptoService {
         } catch (BusinessException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Invalid encrypted payload");
+            throw new BusinessException(ErrorCode.CRYPTO_INVALID_REQUEST, "Invalid encrypted payload", exception);
         }
     }
 

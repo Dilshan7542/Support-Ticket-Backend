@@ -1,7 +1,6 @@
 package lk.di47.ticket.entity;
 
 import jakarta.persistence.*;
-import lk.di47.ticket.util.enums.TicketPriority;
 import lk.di47.ticket.util.enums.TicketStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "tickets")
+@Table(name = "ticket")
 public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +24,9 @@ public class Ticket {
     @Column(nullable = false)
     private Long customerId;
 
+    private Long vendorId;
     private Long departmentId;
+    private Long categoryId;
     private Long assignedStaffId;
 
     @Column(nullable = false, length = 150)
@@ -35,12 +36,14 @@ public class Ticket {
     @Column(nullable = false)
     private String description;
 
-    @Column(length = 50)
-    private String category;
+    @Column(name = "category_code", length = 64)
+    private String categoryCode;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TicketPriority priority;
+    private String priority;
+
+    @Column(nullable = false)
+    private Boolean requiresManualReview = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

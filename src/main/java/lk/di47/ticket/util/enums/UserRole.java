@@ -1,5 +1,8 @@
 package lk.di47.ticket.util.enums;
 
 public enum UserRole {
-    ADMIN,CUSTOMER,STAFF
+    CUSTOMER,
+    VIEWER,
+    EDITOR,
+    SUPER_ADMIN
 }
